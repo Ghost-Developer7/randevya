@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --no-src-dir --import-alias \"@/*\" --no-git --yes)",
-      "Bash(mv \"C:/Users/mehmet.kara/Desktop/m/github/randevya/randevya-proje-dokumani.html\" \"C:/Users/mehmet.kara/Desktop/m/randevya-proje-dokumani.html\")"
+      "Bash(mv \"C:/Users/mehmet.kara/Desktop/m/github/randevya/randevya-proje-dokumani.html\" \"C:/Users/mehmet.kara/Desktop/m/randevya-proje-dokumani.html\")",
+      "Bash(npm install:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm list:*)",
+      "Bash(npx tsx:*)",
+      "Bash(find C:/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/@prisma/client -name validatePrismaClientOptions*)",
+      "Bash(npm show:*)",
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-mssql''\\); console.log\\(Object.keys\\(m\\)\\)\")",
+      "Bash(node -e \"const m = require\\(''@prisma/adapter-mssql''\\); console.log\\(m.PrismaMssql.toString\\(\\).slice\\(0, 500\\)\\)\")",
+      "Bash(npx tsc:*)",
+      "Bash(mkdir -p \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/api/panel/staff/[id]\")",
+      "Bash(mkdir -p \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/api/panel/services/[id]\")",
+      "Bash(mkdir -p \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/api/panel/appointments/[id]\")"
     ]
   }
 }

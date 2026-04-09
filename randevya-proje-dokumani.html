@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Randevya.com — Proje Dökümanı</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --ink2: #3a3a3a;
+    --ink3: #777;
+    --bg: #f5f3ef;
+    --bg2: #eceae4;
+    --accent: #2a5cff;
+    --accent2: #ff4d2e;
+    --accent3: #00b894;
+    --card: #ffffff;
+    --border: rgba(0,0,0,0.08);
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: #fff;
+    padding: 80px 60px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(42,92,255,0.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 200px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,77,46,0.2) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-tag {
+    display: inline-block;
+    background: rgba(42,92,255,0.2);
+    color: #6b93ff;
+    border: 1px solid rgba(42,92,255,0.3);
+    border-radius: 100px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+
+  header h1 span { color: var(--accent); }
+
+  .header-sub {
+    font-size: 20px;
+    color: rgba(255,255,255,0.55);
+    font-weight: 300;
+    margin-bottom: 40px;
+    max-width: 560px;
+  }
+
+  .header-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.75);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px;
+  }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 60px 40px 100px; }
+
+  /* SECTION TITLES */
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(26px, 4vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+
+  .section-lead {
+    font-size: 17px;
+    color: var(--ink2);
+    max-width: 620px;
+    margin-bottom: 40px;
+    font-weight: 300;
+  }
+
+  section { margin-bottom: 80px; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+
+  .card-grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .card-grid.col2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .card p {
+    font-size: 14px;
+    color: var(--ink2);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+
+  .icon-blue { background: rgba(42,92,255,0.1); }
+  .icon-red { background: rgba(255,77,46,0.1); }
+  .icon-green { background: rgba(0,184,148,0.1); }
+  .icon-amber { background: rgba(253,184,19,0.12); }
+  .icon-purple { background: rgba(108,72,255,0.1); }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .arch-layer {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .arch-layer:last-child { border-bottom: none; }
+
+  .arch-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink3);
+    min-width: 120px;
+  }
+
+  .arch-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .arch-item {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+
+  .arch-item.blue { background: rgba(42,92,255,0.08); color: #2a5cff; border-color: rgba(42,92,255,0.15); }
+  .arch-item.purple { background: rgba(108,72,255,0.08); color: #6c48ff; border-color: rgba(108,72,255,0.15); }
+  .arch-item.green { background: rgba(0,184,148,0.08); color: #009d7d; border-color: rgba(0,184,148,0.15); }
+  .arch-item.amber { background: rgba(253,184,19,0.1); color: #b5820a; border-color: rgba(253,184,19,0.2); }
+  .arch-item.red { background: rgba(255,77,46,0.08); color: #e03a20; border-color: rgba(255,77,46,0.15); }
+  .arch-item.gray { background: rgba(0,0,0,0.04); color: var(--ink2); border-color: var(--border); }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .flow-step {
+    flex: 1;
+    min-width: 140px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+  }
+
+  .flow-step + .flow-step { margin-left: 12px; }
+  .flow-step + .flow-step::before {
+    content: '→';
+    position: absolute;
+    left: -14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink3);
+    font-size: 16px;
+    background: var(--bg);
+    padding: 0 2px;
+  }
+
+  .flow-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .flow-step h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .flow-step p {
+    font-size: 12px;
+    color: var(--ink3);
+    line-height: 1.4;
+  }
+
+  /* DB TABLE */
+  .db-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .db-table {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .db-header {
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .db-header span {
+    background: rgba(255,255,255,0.15);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .db-field {
+    padding: 7px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink2);
+  }
+
+  .db-field:last-child { border-bottom: none; }
+
+  .db-field .type {
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 500;
+    font-family: monospace;
+  }
+
+  .db-field .pk { color: var(--accent2); }
+  .db-field .fk { color: var(--accent3); }
+
+  /* TENANT FLOW */
+  .tenant-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+  }
+
+  .domain-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .domain-chip {
+    font-family: monospace;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid;
+  }
+
+  .domain-chip.own { background: rgba(42,92,255,0.06); border-color: rgba(42,92,255,0.2); color: var(--accent); }
+  .domain-chip.sub { background: rgba(0,184,148,0.06); border-color: rgba(0,184,148,0.2); color: var(--accent3); }
+
+  .arrow-right {
+    font-size: 18px;
+    color: var(--ink3);
+  }
+
+  .result-chip {
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+  }
+
+  /* PLAN TABLE */
+  .plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .plan-table th {
+    background: var(--ink);
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 14px 20px;
+    text-align: left;
+  }
+
+  .plan-table th:first-child { width: 200px; }
+
+  .plan-table td {
+    padding: 12px 20px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink2);
+  }
+
+  .plan-table tr:last-child td { border-bottom: none; }
+
+  .plan-table tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+
+  .check { color: var(--accent3); font-weight: 600; }
+  .cross { color: var(--ink3); }
+  .limited { color: #b5820a; font-weight: 500; }
+
+  /* TECH STACK */
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .tech-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .tech-item .tech-cat {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 4px;
+  }
+
+  .tech-item .tech-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+
+  .tech-item .tech-why {
+    font-size: 12px;
+    color: var(--ink3);
+    line-height: 1.4;
+  }
+
+  /* NOTIFICATION FLOW */
+  .notif-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .notif-row {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .notif-trigger {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    min-width: 200px;
+    color: var(--ink);
+  }
+
+  .notif-channels {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .channel {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-weight: 500;
+  }
+
+  .channel.email { background: rgba(42,92,255,0.08); color: var(--accent); }
+  .channel.whatsapp { background: rgba(0,184,148,0.08); color: var(--accent3); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 60px 0;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 32px;
+    font-size: 13px;
+  }
+
+  footer strong { color: rgba(255,255,255,0.8); }
+
+  /* HIGHLIGHT BOX */
+  .highlight {
+    background: rgba(42,92,255,0.06);
+    border: 1px solid rgba(42,92,255,0.15);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .highlight p {
+    font-size: 14px;
+    color: var(--ink2);
+    line-height: 1.6;
+  }
+
+  .highlight strong { color: var(--accent); }
+
+  @media (max-width: 700px) {
+    header { padding: 40px 24px; }
+    main { padding: 40px 20px 80px; }
+    .card-grid.col2, .card-grid.col3 { grid-template-columns: 1fr; }
+    .arch-layer { flex-direction: column; align-items: flex-start; }
+    .arch-label { min-width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-tag">Teknik Proje Dökümanı v1.0</div>
+  <h1>Randevya<span>.com</span></h1>
+  <p class="header-sub">White-label SaaS randevu yönetim platformu — tek kod tabanı, tek veritabanı, sınırsız firma.</p>
+  <div class="header-pills">
+    <span class="pill">Next.js 14+</span>
+    <span class="pill">MSSQL</span>
+    <span class="pill">Multi-tenant</span>
+    <span class="pill">White-label</span>
+    <span class="pill">WhatsApp API</span>
+    <span class="pill">PayTR</span>
+    <span class="pill">Custom Domain</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- 1. AMAÇ -->
+  <section>
+    <div class="section-num">01 — Proje amacı</div>
+    <h2>Ne inşa ediyoruz?</h2>
+    <p class="section-lead">Randevya, farklı sektörlerdeki işletmelere kiralanabilen, her birinin kendi markası gibi görünen bir randevu yönetim platformudur.</p>
+
+    <div class="card-grid col3">
+      <div class="card">
+        <div class="card-icon icon-blue">🏢</div>
+        <h3>Platform sahibi (sen)</h3>
+        <p>İşletmelere aylık abonelik satarsın. Tüm sistem tek kod tabanında çalışır. PayTR ile abonelik ödemelerini alırsın. Merkezi admin panelinden tüm kiracıları yönetirsin.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">✂️</div>
+        <h3>İşletme (kiracı / tenant)</h3>
+        <p>Kayıt olur, kendi tema & logosunu yükler, hizmetlerini ve personelini tanımlar. Kendi domain'ini bağlayabilir. Müşteri randevularını kendi panelinden yönetir.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-red">👤</div>
+        <h3>Son kullanıcı (randevu alan)</h3>
+        <p>İşletmenin sitesine girer — üyelik gerekmez. Hizmet & personel seçer, müsait slotu seçer, bilgilerini girer. Onay email + WhatsApp ile gelir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. WHITE-LABEL MANTĞI -->
+  <section>
+    <div class="section-num">02 — White-label & domain mantığı</div>
+    <h2>Nasıl "ona özel" görünür?</h2>
+    <p class="section-lead">Tek bir Next.js uygulaması çalışır. Her gelen request'te host header okunur, tenant tespit edilir, o tenant'ın teması ve konfigürasyonu yüklenir.</p>
+
+    <div class="tenant-box">
+      <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; font-weight:500; text-transform:uppercase; letter-spacing:0.08em;">Domain çözümleme akışı</p>
+
+      <div class="domain-row">
+        <span class="domain-chip sub">app.randevya.com/hiralamerkezi</span>
+        <span class="arrow-right">→</span>
+        <div class="result-chip">Tenant: Hırlama Merkezi</div>
+      </div>
+      <div class="domain-row">
+        <span class="domain-chip own">randevu.guzellik-salonu.com</span>
+        <span class="arrow-right">→</span>
+        <div class="result-chip">Tenant: Güzellik Salonu</div>
+      </div>
+      <div class="domain-row" style="margin-bottom:0">
+        <span class="domain-chip own">takvim.drmehmetbey.com</span>
+        <span class="arrow-right">→</span>
+        <div class="result-chip">Tenant: Dr. Mehmet Bey Kliniği</div>
+      </div>
+
+      <hr style="margin: 24px 0; border:none; border-top: 1px solid var(--border)">
+
+      <p style="font-size:13px; color:var(--ink2); line-height:1.6;">Middleware her request'te <strong style="color:var(--ink)">host header → tenants tablosu</strong> sorgusunu yapar. Sonuç Redis'te cache'lenir. Tenant bulununca o firma'nın <strong style="color:var(--ink)">tema JSON'u, logosu, renk paleti ve konfigürasyonu</strong> yüklenir. Kullanıcı hiç fark etmez — tamamen o işletmenin sitesindeymiş gibi hisseder.</p>
+    </div>
+  </section>
+
+  <!-- 3. MİMARİ -->
+  <section>
+    <div class="section-num">03 — Sistem mimarisi</div>
+    <h2>Katmanlar</h2>
+    <p class="section-lead">Tüm sistem tek Next.js projesidir. Hem frontend hem API aynı repoda yaşar.</p>
+
+    <div class="arch-box">
+      <div class="arch-layer">
+        <div class="arch-label">İstemci</div>
+        <div class="arch-items">
+          <span class="arch-item blue">Landing page (tenant'a özel)</span>
+          <span class="arch-item blue">Randevu portalı (public)</span>
+          <span class="arch-item blue">İşletme paneli (auth korumalı)</span>
+          <span class="arch-item blue">Platform admin (sadece sen)</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-label">Middleware</div>
+        <div class="arch-items">
+          <span class="arch-item purple">Domain → Tenant çözümleme</span>
+          <span class="arch-item purple">Redis cache (tenant config)</span>
+          <span class="arch-item purple">Auth guard (NextAuth.js)</span>
+          <span class="arch-item purple">Tema inject</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-label">API Routes</div>
+        <div class="arch-items">
+          <span class="arch-item green">Tenant API</span>
+          <span class="arch-item green">Randevu API</span>
+          <span class="arch-item green">Personel & Hizmet API</span>
+          <span class="arch-item green">Bekleme listesi API</span>
+          <span class="arch-item green">Bildirim API</span>
+          <span class="arch-item green">Abonelik API</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-label">Veritabanı</div>
+        <div class="arch-items">
+          <span class="arch-item gray">MSSQL — tek DB</span>
+          <span class="arch-item gray">Prisma ORM</span>
+          <span class="arch-item gray">tenant_id her tabloda zorunlu</span>
+          <span class="arch-item gray">Row-level isolation</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-label">Entegrasyonlar</div>
+        <div class="arch-items">
+          <span class="arch-item amber">PayTR (abonelik ödemesi)</span>
+          <span class="arch-item amber">WhatsApp Cloud API</span>
+          <span class="arch-item amber">Resend / SendGrid (email)</span>
+          <span class="arch-item amber">Cloudflare (SSL + DNS)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. KULLANICI AKIŞLARI -->
+  <section>
+    <div class="section-num">04 — Kullanıcı akışları</div>
+    <h2>Kim ne yapıyor?</h2>
+
+    <p style="font-size:13px; color:var(--ink3); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Son kullanıcı — randevu alma</p>
+    <div class="flow" style="margin-bottom:32px;">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <h4>Siteye girer</h4>
+        <p>İşletmenin domain'i, tenant otomatik tespit edilir</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <h4>Hizmet seçer</h4>
+        <p>Saç kesimi, muayene, ders vb.</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <h4>Personel seçer</h4>
+        <p>İstediği kişi veya "fark etmez"</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <h4>Slot seçer</h4>
+        <p>Takvimde müsait zamanlar gösterilir</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <h4>Bilgi girer</h4>
+        <p>Ad, telefon, email — üyelik yok</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <h4>Onay gelir</h4>
+        <p>Email + WhatsApp ile anında bildirim</p>
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:var(--ink3); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">İşletme — sisteme kayıt & kurulum</p>
+    <div class="flow" style="margin-bottom:32px;">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <h4>Kayıt ol</h4>
+        <p>Email + firma adı + sektör</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <h4>Temayı seç</h4>
+        <p>Renk, logo, slogan, kapak görseli</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <h4>Hizmetleri ekle</h4>
+        <p>Ad, süre, açıklama</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <h4>Personel ekle</h4>
+        <p>Çalışanlar + çalışma saatleri</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <h4>Domain bağla</h4>
+        <p>İsteğe bağlı — CNAME yönlendirmesi</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">6</div>
+        <h4>Yayına al</h4>
+        <p>Link paylaş, randevular gelmeye başlasın</p>
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:var(--ink3); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:12px;">Bekleme listesi akışı</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <h4>Slot dolu</h4>
+        <p>Kullanıcı görmek istediği slota denk gelir</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <h4>Listeye girer</h4>
+        <p>"Boşalırsa haber ver" butonuna basar</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <h4>İptal gelir</h4>
+        <p>Bir randevu iptal edilir</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <h4>Bildirim gider</h4>
+        <p>Sıradaki kişiye email + WhatsApp</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <h4>Süre başlar</h4>
+        <p>X dakika içinde onaylamazsa sıradakine geçer</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. VERİ MODELİ -->
+  <section>
+    <div class="section-num">05 — Veritabanı modeli</div>
+    <h2>MSSQL tablo yapısı</h2>
+    <p class="section-lead">Tek veritabanı. Her tabloda <code style="background:rgba(42,92,255,0.08); color:var(--accent); padding:2px 6px; border-radius:4px; font-size:13px;">tenant_id</code> zorunlu. Tüm sorgular tenant_id filtreli çalışır.</p>
+
+    <div class="highlight">
+      <p><strong>Güvenlik prensibi:</strong> Uygulama katmanında her sorguya <code>WHERE tenant_id = @currentTenant</code> otomatik eklenir. Bir kiracı asla başka kiracının verisini göremez. Prisma middleware ile bu kural merkezi olarak uygulanır.</p>
+    </div>
+
+    <div class="db-grid">
+
+      <div class="db-table">
+        <div class="db-header">Tenants <span>Ana tablo</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field">domain_slug<span class="type">NVARCHAR</span></div>
+        <div class="db-field">custom_domain<span class="type">NVARCHAR NULL</span></div>
+        <div class="db-field">company_name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">sector<span class="type">NVARCHAR</span></div>
+        <div class="db-field">theme_config<span class="type">NVARCHAR(MAX) JSON</span></div>
+        <div class="db-field">logo_url<span class="type">NVARCHAR</span></div>
+        <div class="db-field">plan_id<span class="type fk">FK → Plans</span></div>
+        <div class="db-field">is_active<span class="type">BIT</span></div>
+        <div class="db-field">created_at<span class="type">DATETIME2</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">Staff <span>Personel</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field">full_name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">title<span class="type">NVARCHAR NULL</span></div>
+        <div class="db-field">photo_url<span class="type">NVARCHAR NULL</span></div>
+        <div class="db-field">work_hours<span class="type">NVARCHAR JSON</span></div>
+        <div class="db-field">is_active<span class="type">BIT</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">Services <span>Hizmetler</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field">name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">description<span class="type">NVARCHAR NULL</span></div>
+        <div class="db-field">duration_min<span class="type">INT</span></div>
+        <div class="db-field">is_active<span class="type">BIT</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">StaffServices <span>Atama</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">staff_id</span><span class="type">FK → Staff</span></div>
+        <div class="db-field"><span class="fk">service_id</span><span class="type">FK → Services</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">Appointments <span>Randevular</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field"><span class="fk">staff_id</span><span class="type">FK → Staff</span></div>
+        <div class="db-field"><span class="fk">service_id</span><span class="type">FK → Services</span></div>
+        <div class="db-field">customer_name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">customer_phone<span class="type">NVARCHAR</span></div>
+        <div class="db-field">customer_email<span class="type">NVARCHAR</span></div>
+        <div class="db-field">start_time<span class="type">DATETIME2</span></div>
+        <div class="db-field">end_time<span class="type">DATETIME2</span></div>
+        <div class="db-field">status<span class="type">ENUM</span></div>
+        <div class="db-field">notes<span class="type">NVARCHAR NULL</span></div>
+        <div class="db-field">created_at<span class="type">DATETIME2</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">Waitlist <span>Bekleme</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field"><span class="fk">appointment_id</span><span class="type">FK → Appointments</span></div>
+        <div class="db-field">customer_name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">customer_phone<span class="type">NVARCHAR</span></div>
+        <div class="db-field">customer_email<span class="type">NVARCHAR</span></div>
+        <div class="db-field">queue_order<span class="type">INT</span></div>
+        <div class="db-field">notified_at<span class="type">DATETIME2 NULL</span></div>
+        <div class="db-field">expires_at<span class="type">DATETIME2 NULL</span></div>
+        <div class="db-field">status<span class="type">ENUM</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">Plans <span>Abonelik planları</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field">name<span class="type">NVARCHAR</span></div>
+        <div class="db-field">price_monthly<span class="type">DECIMAL</span></div>
+        <div class="db-field">max_staff<span class="type">INT</span></div>
+        <div class="db-field">max_services<span class="type">INT</span></div>
+        <div class="db-field">whatsapp_enabled<span class="type">BIT</span></div>
+        <div class="db-field">custom_domain<span class="type">BIT</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">TenantSubscriptions <span>Ödemeler</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field"><span class="fk">plan_id</span><span class="type">FK → Plans</span></div>
+        <div class="db-field">paytr_ref<span class="type">NVARCHAR</span></div>
+        <div class="db-field">starts_at<span class="type">DATETIME2</span></div>
+        <div class="db-field">ends_at<span class="type">DATETIME2</span></div>
+        <div class="db-field">status<span class="type">ENUM</span></div>
+      </div>
+
+      <div class="db-table">
+        <div class="db-header">NotificationLogs <span>Gönderim logu</span></div>
+        <div class="db-field"><span class="pk">id</span><span class="type">UNIQUEID PK</span></div>
+        <div class="db-field"><span class="fk">tenant_id</span><span class="type">FK → Tenants</span></div>
+        <div class="db-field">channel<span class="type">ENUM email/wa</span></div>
+        <div class="db-field">recipient<span class="type">NVARCHAR</span></div>
+        <div class="db-field">event_type<span class="type">NVARCHAR</span></div>
+        <div class="db-field">status<span class="type">ENUM</span></div>
+        <div class="db-field">sent_at<span class="type">DATETIME2</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. BİLDİRİM SİSTEMİ -->
+  <section>
+    <div class="section-num">06 — Bildirim sistemi</div>
+    <h2>Kim, ne zaman, nasıl haberdar olur?</h2>
+
+    <div class="notif-flow">
+      <div class="notif-row">
+        <div class="notif-trigger">🗓️ Randevu oluşturuldu</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → Müşteri (onay)</span>
+          <span class="channel whatsapp">WhatsApp → Müşteri (onay)</span>
+          <span class="channel email">Email → İşletme (yeni randevu)</span>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-trigger">❌ Randevu iptal edildi</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → Müşteri (iptal)</span>
+          <span class="channel whatsapp">WhatsApp → Müşteri (iptal)</span>
+          <span class="channel email">Email → İşletme (iptal)</span>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-trigger">⏰ Randevu hatırlatma (24s önce)</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → Müşteri</span>
+          <span class="channel whatsapp">WhatsApp → Müşteri</span>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-trigger">🔔 Bekleme listesi — slot açıldı</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → Sıradaki kişi</span>
+          <span class="channel whatsapp">WhatsApp → Sıradaki kişi</span>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-trigger">⏳ Bekleme listesi — süre doldu</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → Sonraki kişi</span>
+          <span class="channel whatsapp">WhatsApp → Sonraki kişi</span>
+        </div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-trigger">💳 Abonelik yenileme (3 gün önce)</div>
+        <div class="notif-channels">
+          <span class="channel email">Email → İşletme sahibi</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. ABONELIK PLANLARI -->
+  <section>
+    <div class="section-num">07 — Abonelik planları</div>
+    <h2>Fiyatlandırma yapısı</h2>
+    <p class="section-lead">Bu rakamlar örnektir — değiştirilebilir. Önemli olan plan limitleri DB'de tutulur, kod değişmez.</p>
+
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th>Özellik</th>
+          <th>Başlangıç</th>
+          <th>Pro</th>
+          <th>Kurumsal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Aylık ücret (tahmini)</td><td>₺299</td><td>₺599</td><td>₺999</td></tr>
+        <tr><td>Maksimum personel</td><td>2</td><td>10</td><td>Sınırsız</td></tr>
+        <tr><td>Maksimum hizmet</td><td>5</td><td>30</td><td>Sınırsız</td></tr>
+        <tr><td>WhatsApp bildirimleri</td><td class="cross">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr><td>Custom domain</td><td class="cross">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr><td>Bekleme listesi</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr><td>Randevu hatırlatma</td><td class="limited">Email</td><td class="check">Email + WA</td><td class="check">Email + WA</td></tr>
+        <tr><td>Analitik dashboard</td><td class="cross">—</td><td class="check">✓</td><td class="check">✓</td></tr>
+        <tr><td>Öncelikli destek</td><td class="cross">—</td><td class="cross">—</td><td class="check">✓</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 8. TEKNOLOJİ YIĞINI -->
+  <section>
+    <div class="section-num">08 — Teknoloji yığını</div>
+    <h2>Ne kullanacağız?</h2>
+
+    <div class="tech-grid">
+      <div class="tech-item">
+        <div class="tech-cat">Framework</div>
+        <div class="tech-name">Next.js 14+</div>
+        <div class="tech-why">App Router, API Routes, Middleware — hem frontend hem backend tek repoda</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Veritabanı</div>
+        <div class="tech-name">MSSQL</div>
+        <div class="tech-why">Tek veritabanı, tenant_id ile izolasyon, güçlü transaction desteği</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">ORM</div>
+        <div class="tech-name">Prisma</div>
+        <div class="tech-why">Type-safe sorgular, migration yönetimi, middleware ile tenant izolasyonu</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Auth</div>
+        <div class="tech-name">NextAuth.js</div>
+        <div class="tech-why">İşletme paneli girişi için session yönetimi</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Cache</div>
+        <div class="tech-name">Redis (Upstash)</div>
+        <div class="tech-why">Tenant config cache, bekleme listesi süresi, rate limiting</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Ödeme</div>
+        <div class="tech-name">PayTR</div>
+        <div class="tech-why">İşletmelerin sana aylık abonelik ödemesi için iframe entegrasyon</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Mesajlaşma</div>
+        <div class="tech-name">WhatsApp Cloud API</div>
+        <div class="tech-why">Meta Business API — onay, hatırlatma, bekleme listesi bildirimleri</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Email</div>
+        <div class="tech-name">Resend</div>
+        <div class="tech-why">Modern email API, React Email ile güzel şablonlar, yüksek deliverability</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Deployment</div>
+        <div class="tech-name">Vercel</div>
+        <div class="tech-why">Next.js ile native entegrasyon, edge middleware, wildcard domain desteği</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">DNS & SSL</div>
+        <div class="tech-name">Cloudflare</div>
+        <div class="tech-why">Wildcard SSL, custom domain CNAME yönlendirmesi, DDoS koruması</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">UI</div>
+        <div class="tech-name">Tailwind CSS</div>
+        <div class="tech-why">Hızlı geliştirme, tenant tema değişkenleri ile dinamik stil</div>
+      </div>
+      <div class="tech-item">
+        <div class="tech-cat">Takvim UI</div>
+        <div class="tech-name">React Big Calendar</div>
+        <div class="tech-why">İşletme paneli takvim görünümü için güçlü ve özelleştirilebilir</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. PROJE KLASÖR YAPISI -->
+  <section>
+    <div class="section-num">09 — Proje klasör yapısı</div>
+    <h2>Next.js repo yapısı</h2>
+
+    <div class="card" style="font-family: monospace; font-size: 13px; line-height: 2; color: var(--ink2);">
+      <div style="color:var(--accent); font-weight:600;">randevya/</div>
+      <div style="padding-left:20px;">
+        <div style="color:var(--ink3);">├── app/</div>
+        <div style="padding-left:20px;">
+          <div>├── (public)/              <span style="color:var(--ink3); font-size:11px;">→ landing + randevu portalı</span></div>
+          <div>│   ├── page.tsx           <span style="color:var(--ink3); font-size:11px;">→ tenant landing page</span></div>
+          <div>│   ├── randevu/           <span style="color:var(--ink3); font-size:11px;">→ randevu alma akışı</span></div>
+          <div>│   └── bekle/             <span style="color:var(--ink3); font-size:11px;">→ bekleme listesi</span></div>
+          <div>├── (panel)/               <span style="color:var(--ink3); font-size:11px;">→ işletme paneli (auth korumalı)</span></div>
+          <div>│   ├── dashboard/</div>
+          <div>│   ├── randevular/</div>
+          <div>│   ├── personel/</div>
+          <div>│   ├── hizmetler/</div>
+          <div>│   ├── tema/</div>
+          <div>│   └── ayarlar/</div>
+          <div>├── (admin)/               <span style="color:var(--ink3); font-size:11px;">→ platform admin (sadece sen)</span></div>
+          <div>│   ├── tenants/</div>
+          <div>│   ├── planlar/</div>
+          <div>│   └── istatistikler/</div>
+          <div>└── api/                   <span style="color:var(--ink3); font-size:11px;">→ tüm API route'ları</span></div>
+          <div style="padding-left:20px;">
+            <div>├── tenant/</div>
+            <div>├── appointments/</div>
+            <div>├── staff/</div>
+            <div>├── services/</div>
+            <div>├── waitlist/</div>
+            <div>├── notifications/</div>
+            <div>└── webhooks/paytr/</div>
+          </div>
+        </div>
+        <div style="color:var(--ink3);">├── middleware.ts           <span style="color:var(--ink3); font-size:11px;">→ domain → tenant çözümleme</span></div>
+        <div style="color:var(--ink3);">├── lib/</div>
+        <div style="padding-left:20px;">
+          <div>├── db/prisma.ts</div>
+          <div>├── tenant.ts              <span style="color:var(--ink3); font-size:11px;">→ tenant context</span></div>
+          <div>├── whatsapp.ts</div>
+          <div>├── email.ts</div>
+          <div>└── paytr.ts</div>
+        </div>
+        <div style="color:var(--ink3);">├── prisma/schema.prisma</div>
+        <div style="color:var(--ink3);">└── public/uploads/        <span style="color:var(--ink3); font-size:11px;">→ tenant logoları</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. KRİTİK NOTLAR -->
+  <section>
+    <div class="section-num">10 — Kritik geliştirme notları</div>
+    <h2>Dikkat edilmesi gerekenler</h2>
+
+    <div class="card-grid col2">
+      <div class="card">
+        <div class="card-icon icon-red">⚡</div>
+        <h3>Bekleme listesi race condition</h3>
+        <p>Slot boşaldığında birden fazla kişiye aynı anda bildirim gidebilir. MSSQL transaction + optimistic locking ile ilk onaylayan kişi slotu alır, diğerleri "slot doldu" mesajı alır.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-blue">🔒</div>
+        <h3>Tenant izolasyonu</h3>
+        <p>Prisma middleware'de her sorguya otomatik tenant_id filtresi eklenir. API route'larında ayrıca tenant doğrulaması yapılır. Hiçbir endpoint tenant_id olmadan çalışmaz.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-green">🌐</div>
+        <h3>Custom domain SSL</h3>
+        <p>Müşteri CNAME kaydı oluşturur → Cloudflare veya Vercel otomatik SSL sertifikası üretir. Bu süreç webhook ile takip edilir, aktif olunca tenant kaydı güncellenir.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-amber">📱</div>
+        <h3>WhatsApp API limitleri</h3>
+        <p>Meta Business API ile her işletme kendi numarasını bağlar veya platform numarası kullanılır. İlk mesaj template bazlı olmak zorunda (Meta onayı gerekir). Bu süreç önceden planlanmalı.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-purple">🗓️</div>
+        <h3>Slot üretme mantığı</h3>
+        <p>Çalışma saatleri + hizmet süresi + mevcut randevular hesaplanarak dinamik slot listesi üretilir. Personel izinleri ve özel kapalı günler de bu hesaba dahil edilmeli.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon icon-red">💾</div>
+        <h3>Tenant config cache</h3>
+        <p>Her request'te DB sorgusu atmamak için Redis'te tenant config cache'lenir. Tema değişikliklerinde cache invalidation yapılır. Cache süresiz tutulursa değişiklikler yansımaz.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <strong>randevya.com</strong> — Teknik Proje Dökümanı v1.0<br>
+  White-label SaaS Randevu Yönetim Platformu · Next.js + MSSQL + Multi-tenant
+</footer>
+
+</body>
+</html>

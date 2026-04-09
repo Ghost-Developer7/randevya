@@ -1,0 +1,289 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlserver"
+}
+
+// ──────────────────────────────────────────────
+// PLANS — Abonelik planları
+// ──────────────────────────────────────────────
+model Plan {
+  id               String   @id @default(uuid())
+  name             String   @db.NVarChar(100)
+  price_monthly    Decimal  @db.Decimal(10, 2)
+  max_staff        Int
+  max_services     Int
+  whatsapp_enabled Boolean  @default(false)
+  custom_domain    Boolean  @default(false)
+  waitlist_enabled Boolean  @default(true)
+  analytics        Boolean  @default(false)
+  priority_support Boolean  @default(false)
+  created_at       DateTime @default(now())
+
+  tenants              Tenant[]
+  tenant_subscriptions TenantSubscription[]
+
+  @@map("Plans")
+}
+
+// ──────────────────────────────────────────────
+// TENANTS — Kiracı / İşletme
+// ──────────────────────────────────────────────
+model Tenant {
+  id            String   @id @default(uuid())
+  domain_slug   String   @unique @db.NVarChar(100)
+  custom_domain String?  @db.NVarChar(255)
+  company_name  String   @db.NVarChar(255)
+  sector        String   @db.NVarChar(100)
+  theme_config  String   @db.NVarChar(Max) // JSON string
+  logo_url      String?  @db.NVarChar(500)
+  owner_email   String   @db.NVarChar(255)
+  owner_name    String   @db.NVarChar(255)
+  password_hash String   @db.NVarChar(255)
+  plan_id       String
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  plan              Plan               @relation(fields: [plan_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff             Staff[]
+  services          Service[]
+  staff_services    StaffService[]
+  appointments      Appointment[]
+  waitlist          WaitlistEntry[]
+  subscriptions     TenantSubscription[]
+  notification_logs NotificationLog[]
+  error_logs        ErrorLog[]
+  support_tickets   SupportTicket[]
+
+  @@map("Tenants")
+}
+
+// ──────────────────────────────────────────────
+// STAFF — Personel
+// ──────────────────────────────────────────────
+model Staff {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  full_name  String   @db.NVarChar(255)
+  title      String?  @db.NVarChar(100)
+  photo_url  String?  @db.NVarChar(500)
+  work_hours String   @db.NVarChar(Max) // JSON: {"mon":[{"start":"09:00","end":"18:00"}],...}
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  tenant         Tenant         @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff_services StaffService[]
+  appointments   Appointment[]
+
+  @@map("Staff")
+}
+
+// ──────────────────────────────────────────────
+// SERVICES — Hizmetler
+// ──────────────────────────────────────────────
+model Service {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  name         String   @db.NVarChar(255)
+  description  String?  @db.NVarChar(Max)
+  duration_min Int
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+
+  tenant         Tenant         @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff_services StaffService[]
+  appointments   Appointment[]
+
+  @@map("Services")
+}
+
+// ──────────────────────────────────────────────
+// STAFF_SERVICES — Hangi personel hangi hizmeti verir
+// ──────────────────────────────────────────────
+model StaffService {
+  id         String @id @default(uuid())
+  tenant_id  String
+  staff_id   String
+  service_id String
+
+  tenant  Tenant  @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff   Staff   @relation(fields: [staff_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  service Service @relation(fields: [service_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@unique([staff_id, service_id])
+  @@map("StaffServices")
+}
+
+// ──────────────────────────────────────────────
+// APPOINTMENTS — Randevular
+// status: PENDING | CONFIRMED | CANCELLED | COMPLETED | NO_SHOW
+// ──────────────────────────────────────────────
+model Appointment {
+  id             String   @id @default(uuid())
+  tenant_id      String
+  staff_id       String
+  service_id     String
+  customer_name  String   @db.NVarChar(255)
+  customer_phone String   @db.NVarChar(20)
+  customer_email String   @db.NVarChar(255)
+  start_time     DateTime
+  end_time       DateTime
+  status         String   @default("PENDING") @db.NVarChar(20)
+  notes          String?  @db.NVarChar(Max)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  tenant   Tenant          @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff    Staff           @relation(fields: [staff_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  service  Service         @relation(fields: [service_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  waitlist WaitlistEntry[]
+
+  @@map("Appointments")
+}
+
+// ──────────────────────────────────────────────
+// WAITLIST — Bekleme listesi
+// status: WAITING | NOTIFIED | CONFIRMED | EXPIRED | CANCELLED
+// ──────────────────────────────────────────────
+model WaitlistEntry {
+  id             String    @id @default(uuid())
+  tenant_id      String
+  appointment_id String
+  customer_name  String    @db.NVarChar(255)
+  customer_phone String    @db.NVarChar(20)
+  customer_email String    @db.NVarChar(255)
+  queue_order    Int
+  notified_at    DateTime?
+  expires_at     DateTime?
+  status         String    @default("WAITING") @db.NVarChar(20)
+  created_at     DateTime  @default(now())
+
+  tenant      Tenant      @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  appointment Appointment @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("Waitlist")
+}
+
+// ──────────────────────────────────────────────
+// TENANT_SUBSCRIPTIONS — Abonelik ödemeleri
+// status: ACTIVE | EXPIRED | CANCELLED | PENDING | REFUNDED
+// ──────────────────────────────────────────────
+model TenantSubscription {
+  id         String    @id @default(uuid())
+  tenant_id  String
+  plan_id    String
+  paytr_ref  String?   @db.NVarChar(255)
+  starts_at  DateTime
+  ends_at    DateTime
+  status     String    @default("ACTIVE") @db.NVarChar(20)
+  created_at DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  plan   Plan   @relation(fields: [plan_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("TenantSubscriptions")
+}
+
+// ──────────────────────────────────────────────
+// NOTIFICATION_LOGS — Bildirim gönderim logu
+// channel: EMAIL | WHATSAPP
+// status: SENT | FAILED | PENDING
+// ──────────────────────────────────────────────
+model NotificationLog {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  channel    String   @db.NVarChar(20)
+  recipient  String   @db.NVarChar(255)
+  event_type String   @db.NVarChar(100)
+  status     String   @default("SENT") @db.NVarChar(20)
+  error_msg  String?  @db.NVarChar(Max)
+  sent_at    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("NotificationLogs")
+}
+
+// ──────────────────────────────────────────────
+// ERROR_LOGS — Sistem hata kayıtları
+// ──────────────────────────────────────────────
+model ErrorLog {
+  id           String   @id @default(uuid())
+  tenant_id    String?
+  user_email   String?  @db.NVarChar(255)
+  user_role    String?  @db.NVarChar(50)
+  endpoint     String   @db.NVarChar(500)
+  method       String   @db.NVarChar(10)
+  status_code  Int      @default(500)
+  error_msg    String   @db.NVarChar(Max)
+  stack_trace  String?  @db.NVarChar(Max)
+  ip_address   String?  @db.NVarChar(100)
+  created_at   DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("ErrorLogs")
+}
+
+// ──────────────────────────────────────────────
+// ADMIN_USERS — Platform yöneticileri
+// role: SUPER_ADMIN | SUPPORT | BILLING | VIEWER
+// ──────────────────────────────────────────────
+model AdminUser {
+  id            String    @id @default(uuid())
+  email         String    @unique @db.NVarChar(255)
+  password_hash String    @db.NVarChar(255)
+  full_name     String    @db.NVarChar(255)
+  role          String    @default("SUPPORT") @db.NVarChar(50)
+  // SUPER_ADMIN: tam yetki | SUPPORT: destek + okuma | BILLING: ödeme/iade | VIEWER: salt okunur
+  is_active     Boolean   @default(true)
+  last_login_at DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  support_messages SupportMessage[]
+
+  @@map("AdminUsers")
+}
+
+// ──────────────────────────────────────────────
+// SUPPORT_TICKETS — Destek talepleri
+// status: OPEN | IN_PROGRESS | RESOLVED | CLOSED
+// priority: LOW | NORMAL | HIGH | URGENT
+// ──────────────────────────────────────────────
+model SupportTicket {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  subject    String   @db.NVarChar(500)
+  status     String   @default("OPEN") @db.NVarChar(20)
+  priority   String   @default("NORMAL") @db.NVarChar(20)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  tenant   Tenant           @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  messages SupportMessage[]
+
+  @@map("SupportTickets")
+}
+
+// ──────────────────────────────────────────────
+// SUPPORT_MESSAGES — Destek talebi mesajları
+// sender: TENANT | ADMIN
+// ──────────────────────────────────────────────
+model SupportMessage {
+  id         String   @id @default(uuid())
+  ticket_id  String
+  sender     String   @db.NVarChar(20) // TENANT | ADMIN
+  admin_id   String?  // sender == ADMIN ise dolu
+  content    String   @db.NVarChar(Max)
+  created_at DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticket_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  admin  AdminUser?    @relation(fields: [admin_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("SupportMessages")
+}
