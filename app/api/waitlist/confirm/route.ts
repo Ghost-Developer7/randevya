@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { confirmWaitlistSlot } from "@/lib/waitlist"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // GET /api/waitlist/confirm?entry=xxx — bekleme listesi onay linki
 // Email içindeki butona tıklandığında bu endpoint çağrılır,
@@ -17,4 +18,5 @@ async function getHandler(req: NextRequest) {
 
   return ok({ confirmed: true, message: result.message })
 }
-export const GET = withErrorHandler(getHandler, "GET /api/waitlist/confirm")
+const handlerWithError = withErrorHandler(getHandler, "GET /api/waitlist/confirm")
+export const GET = withRateLimit(handlerWithError, "rl:waitlist-confirm", RATE_LIMITS.publicBooking)

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { getTenantFromRequest, ok, err, parseBody, withErrorHandler } from "@/lib/api-helpers"
 import { addToWaitlist } from "@/lib/waitlist"
 import { db } from "@/lib/db"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import type { CreateWaitlistRequest } from "@/types"
 
 // POST /api/waitlist — bekleme listesine ekle
@@ -43,4 +44,5 @@ async function postHandler(req: NextRequest) {
 
   return ok({ id: entry.id, queue_order: entry.queue_order }, 201)
 }
-export const POST = withErrorHandler(postHandler, "POST /api/waitlist")
+const handlerWithError = withErrorHandler(postHandler, "POST /api/waitlist")
+export const POST = withRateLimit(handlerWithError, "rl:waitlist", RATE_LIMITS.publicBooking)

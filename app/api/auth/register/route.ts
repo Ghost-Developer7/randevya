@@ -3,6 +3,7 @@ import { ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { REQUIRED_CONSENTS_TENANT } from "@/prisma/legal-content"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 type RegisterRequest = {
   company_name: string
@@ -134,4 +135,5 @@ async function postHandler(req: NextRequest) {
     201
   )
 }
-export const POST = withErrorHandler(postHandler, "POST /api/auth/register")
+const handlerWithError = withErrorHandler(postHandler, "POST /api/auth/register")
+export const POST = withRateLimit(handlerWithError, "rl:register", RATE_LIMITS.authRegister)

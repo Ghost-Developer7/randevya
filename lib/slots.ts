@@ -174,19 +174,21 @@ export async function isSlotAvailable({
   staffId,
   startTime,
   endTime,
+  excludeAppointmentId,
 }: {
   tenantId: string
   staffId: string
   startTime: Date
   endTime: Date
+  excludeAppointmentId?: string  // reschedule için mevcut randevuyu hariç tut
 }): Promise<boolean> {
   const conflict = await db.appointment.findFirst({
     where: {
       tenant_id: tenantId,
       staff_id: staffId,
       status: { in: ["PENDING", "CONFIRMED"] },
+      ...(excludeAppointmentId ? { id: { not: excludeAppointmentId } } : {}),
       OR: [
-        // Mevcut randevu yeni slotla çakışıyor
         { start_time: { lt: endTime }, end_time: { gt: startTime } },
       ],
     },

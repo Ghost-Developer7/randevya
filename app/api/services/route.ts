@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { getTenantFromRequest, ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // GET /api/services — tenant'ın aktif hizmet listesi
 // ?staffId=xxx  filtresi ile sadece o personelin verdiği hizmetleri getirir
@@ -33,4 +34,5 @@ async function getHandler(req: NextRequest) {
     }))
   )
 }
-export const GET = withErrorHandler(getHandler, "GET /api/services")
+const handlerWithError = withErrorHandler(getHandler, "GET /api/services")
+export const GET = withRateLimit(handlerWithError, "rl:services", RATE_LIMITS.publicSlots)

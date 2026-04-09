@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { getTenantFromRequest, ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { getAvailableSlots } from "@/lib/slots"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // GET /api/slots?serviceId=xxx&date=YYYY-MM-DD[&staffId=xxx]
 async function getHandler(req: NextRequest) {
@@ -29,4 +30,5 @@ async function getHandler(req: NextRequest) {
 
   return ok(slots)
 }
-export const GET = withErrorHandler(getHandler, "GET /api/slots")
+const handlerWithError = withErrorHandler(getHandler, "GET /api/slots")
+export const GET = withRateLimit(handlerWithError, "rl:slots", RATE_LIMITS.publicSlots)

@@ -18,6 +18,15 @@ import {
   sendWaAppointmentReminder,
   sendWaWaitlistNotify,
 } from "@/lib/whatsapp"
+import {
+  sendAppointmentConfirmSms,
+  sendAppointmentCancelSms,
+  sendAppointmentReminderSms,
+  sendWaitlistNotifySms,
+} from "@/lib/sms"
+
+// SMS aktif mi? İleti Merkezi credentials varsa gönder
+const SMS_ENABLED = !!(process.env.ILETIMERKEZI_API_KEY && process.env.ILETIMERKEZI_API_SECRET)
 
 // Tenant'ın plan özelliklerini çek (cache yok — çok sık çağrılmaz)
 async function getTenantPlan(tenantId: string) {
@@ -67,9 +76,8 @@ export async function notifyAppointmentCreated(appointmentId: string): Promise<v
     }),
   ]
 
-  if (tenant.plan.whatsapp_enabled) {
-    tasks.push(sendWaAppointmentConfirm(base))
-  }
+  if (tenant.plan.whatsapp_enabled) tasks.push(sendWaAppointmentConfirm(base))
+  if (SMS_ENABLED) tasks.push(sendAppointmentConfirmSms(base))
 
   await Promise.allSettled(tasks)
 }
@@ -100,9 +108,8 @@ export async function notifyAppointmentCancelled(appointmentId: string): Promise
 
   const tasks: Promise<unknown>[] = [sendAppointmentCancel(base)]
 
-  if (tenant.plan.whatsapp_enabled) {
-    tasks.push(sendWaAppointmentCancel(base))
-  }
+  if (tenant.plan.whatsapp_enabled) tasks.push(sendWaAppointmentCancel(base))
+  if (SMS_ENABLED) tasks.push(sendAppointmentCancelSms(base))
 
   await Promise.allSettled(tasks)
 }
@@ -147,9 +154,8 @@ export async function notifyUpcomingAppointments(): Promise<void> {
 
     const tasks: Promise<unknown>[] = [sendAppointmentReminder(base)]
 
-    if (appointment.tenant.plan.whatsapp_enabled) {
-      tasks.push(sendWaAppointmentReminder(base))
-    }
+    if (appointment.tenant.plan.whatsapp_enabled) tasks.push(sendWaAppointmentReminder(base))
+    if (SMS_ENABLED) tasks.push(sendAppointmentReminderSms(base))
 
     await Promise.allSettled(tasks)
   }
@@ -197,9 +203,8 @@ export async function notifyWaitlistSlotOpened(
     sendWaitlistNotify({ ...base, companyName: entry.appointment.tenant.company_name }),
   ]
 
-  if (entry.appointment.tenant.plan.whatsapp_enabled) {
-    tasks.push(sendWaWaitlistNotify(base))
-  }
+  if (entry.appointment.tenant.plan.whatsapp_enabled) tasks.push(sendWaWaitlistNotify(base))
+  if (SMS_ENABLED) tasks.push(sendWaitlistNotifySms(base))
 
   await Promise.allSettled(tasks)
 }

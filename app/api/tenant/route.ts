@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
 import { getTenantFromRequest, ok, err, withErrorHandler } from "@/lib/api-helpers"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import type { ThemeConfig } from "@/types"
 
 // GET /api/tenant — mevcut host'un tenant config'ini döndür
@@ -16,4 +17,5 @@ async function getHandler(req: NextRequest) {
     theme_config: JSON.parse(tenant.theme_config) as ThemeConfig,
   })
 }
-export const GET = withErrorHandler(getHandler, "GET /api/tenant")
+const handlerWithError = withErrorHandler(getHandler, "GET /api/tenant")
+export const GET = withRateLimit(handlerWithError, "rl:tenant", RATE_LIMITS.publicSlots)

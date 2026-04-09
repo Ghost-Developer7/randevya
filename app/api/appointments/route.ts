@@ -3,6 +3,8 @@ import { getTenantFromRequest, ok, err, parseBody, withErrorHandler } from "@/li
 import { db } from "@/lib/db"
 import { isSlotAvailable } from "@/lib/slots"
 import { notifyAppointmentCreated } from "@/lib/notifications"
+import { fireWebhook } from "@/lib/webhook"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import type { CreateAppointmentRequest } from "@/types"
 
 // POST /api/appointments — randevu oluştur
@@ -72,8 +74,15 @@ async function postHandler(req: NextRequest) {
     },
   })
 
-  // Bildirimleri arka planda gönder (response'u bloklamaz)
+  // Bildirimleri ve webhook'u arka planda gönder
   notifyAppointmentCreated(appointment.id).catch(console.error)
+  fireWebhook(tenant.id, "appointment.created", {
+    appointment_id: appointment.id,
+    start_time: appointment.start_time.toISOString(),
+    customer_name: appointment.customer_name,
+    service_id,
+    staff_id,
+  }).catch(() => {})
 
   return ok(
     {
@@ -85,4 +94,5 @@ async function postHandler(req: NextRequest) {
     201
   )
 }
-export const POST = withErrorHandler(postHandler, "POST /api/appointments")
+const handlerWithError = withErrorHandler(postHandler, "POST /api/appointments")
+export const POST = withRateLimit(handlerWithError, "rl:booking", RATE_LIMITS.publicBooking)

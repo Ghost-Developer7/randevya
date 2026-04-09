@@ -58,6 +58,8 @@ model Tenant {
   notification_logs NotificationLog[]
   error_logs        ErrorLog[]
   support_tickets   SupportTicket[]
+  closed_days       ClosedDay[]
+  webhook_endpoints WebhookEndpoint[]
 
   @@map("Tenants")
 }
@@ -78,6 +80,7 @@ model Staff {
   tenant         Tenant         @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   staff_services StaffService[]
   appointments   Appointment[]
+  closed_days    ClosedDay[]
 
   @@map("Staff")
 }
@@ -268,6 +271,60 @@ model SupportTicket {
   messages SupportMessage[]
 
   @@map("SupportTickets")
+}
+
+// ──────────────────────────────────────────────
+// CLOSED_DAYS — Özel kapalı günler / tatiller
+// staff_id null ise tüm işletme kapalı
+// ──────────────────────────────────────────────
+model ClosedDay {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  staff_id   String?
+  date       DateTime // sadece tarih kısmı kullanılır (saat 00:00)
+  reason     String?  @db.NVarChar(255)
+  created_at DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  staff  Staff?  @relation(fields: [staff_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("ClosedDays")
+}
+
+// ──────────────────────────────────────────────
+// WEBHOOK_ENDPOINTS — Tenant webhook hedefleri
+// ──────────────────────────────────────────────
+model WebhookEndpoint {
+  id         String   @id @default(uuid())
+  tenant_id  String
+  url        String   @db.NVarChar(500)
+  secret     String   @db.NVarChar(255) // HMAC imzalama anahtarı
+  events     String   @db.NVarChar(Max) // JSON array: ["appointment.created","*"]
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  tenant Tenant       @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  logs   WebhookLog[]
+
+  @@map("WebhookEndpoints")
+}
+
+// ──────────────────────────────────────────────
+// WEBHOOK_LOGS — Webhook teslimat geçmişi
+// ──────────────────────────────────────────────
+model WebhookLog {
+  id          String   @id @default(uuid())
+  endpoint_id String
+  event       String   @db.NVarChar(100)
+  payload     String   @db.NVarChar(Max)
+  status_code Int?
+  success     Boolean
+  error_msg   String?  @db.NVarChar(Max)
+  created_at  DateTime @default(now())
+
+  endpoint WebhookEndpoint @relation(fields: [endpoint_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("WebhookLogs")
 }
 
 // ──────────────────────────────────────────────
