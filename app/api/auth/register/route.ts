@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import { REQUIRED_CONSENTS_TENANT } from "@/prisma/legal-content"
 
 type RegisterRequest = {
   company_name: string
@@ -9,15 +10,23 @@ type RegisterRequest = {
   owner_name: string
   owner_email: string
   password: string
-  domain_slug: string    // işletme kendi slug'ını seçer
+  domain_slug: string
+  // Zorunlu sözleşme onayları: ["KVKK","PRIVACY_POLICY","TERMS_OF_USE","DISTANCE_SALES"]
+  consents: string[]
 }
 
 // POST /api/auth/register — yeni işletme kaydı
 async function postHandler(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  const userAgent = req.headers.get("user-agent") ?? undefined
+
   const body = await req.json().catch(() => null) as RegisterRequest | null
   if (!body) return err("Geçersiz JSON")
 
-  const { company_name, sector, owner_name, owner_email, password, domain_slug } = body
+  const { company_name, sector, owner_name, owner_email, password, domain_slug, consents } = body
 
   // Zorunlu alan kontrolü
   if (!company_name?.trim()) return err("company_name zorunlu")
@@ -27,6 +36,19 @@ async function postHandler(req: NextRequest) {
   if (!password) return err("password zorunlu")
   if (!domain_slug?.trim()) return err("domain_slug zorunlu")
 
+  // Sözleşme onayları kontrolü
+  if (!Array.isArray(consents) || consents.length === 0) {
+    return err("Devam etmek için tüm sözleşmeleri onaylamanız zorunludur", 400, "CONSENTS_REQUIRED")
+  }
+  const missingConsents = REQUIRED_CONSENTS_TENANT.filter((c) => !consents.includes(c))
+  if (missingConsents.length > 0) {
+    return err(
+      `Şu sözleşmeler onaylanmadı: ${missingConsents.join(", ")}`,
+      400,
+      "CONSENTS_INCOMPLETE"
+    )
+  }
+
   // Email format
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(owner_email)) {
     return err("Geçersiz email adresi")
@@ -35,7 +57,7 @@ async function postHandler(req: NextRequest) {
   // Şifre uzunluğu
   if (password.length < 8) return err("Şifre en az 8 karakter olmalı")
 
-  // Slug format: sadece küçük harf, rakam, tire
+  // Slug format
   const slugClean = domain_slug.toLowerCase().trim().replace(/\s+/g, "-")
   if (!/^[a-z0-9-]{3,50}$/.test(slugClean)) {
     return err("domain_slug sadece küçük harf, rakam ve tire içerebilir (3-50 karakter)")
@@ -49,6 +71,16 @@ async function postHandler(req: NextRequest) {
 
   if (slugExists) return err("Bu domain_slug zaten kullanımda", 409, "SLUG_TAKEN")
   if (emailExists) return err("Bu email adresi zaten kayıtlı", 409, "EMAIL_TAKEN")
+
+  // Onaylanan sözleşmelerin aktif versiyonlarını al
+  const activeDocs = await db.legalDocument.findMany({
+    where: { type: { in: consents }, is_active: true },
+    select: { id: true, type: true },
+  })
+
+  if (activeDocs.length !== consents.length) {
+    return err("Bazı sözleşmeler bulunamadı, lütfen sayfayı yenileyip tekrar deneyin", 400)
+  }
 
   // Varsayılan başlangıç planını al
   const starterPlan = await db.plan.findFirst({
@@ -79,6 +111,18 @@ async function postHandler(req: NextRequest) {
       theme_config: JSON.stringify(defaultTheme),
       is_active: true,
     },
+  })
+
+  // Onay kayıtlarını oluştur
+  await db.userConsent.createMany({
+    data: activeDocs.map((doc) => ({
+      document_id: doc.id,
+      user_type: "TENANT",
+      tenant_id: tenant.id,
+      user_email: owner_email.toLowerCase().trim(),
+      ip_address: ip,
+      user_agent: userAgent ?? null,
+    })),
   })
 
   return ok(

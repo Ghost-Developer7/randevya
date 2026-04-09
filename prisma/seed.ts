@@ -4,6 +4,7 @@ config({ path: ".env" })
 import { PrismaClient } from "../app/generated/prisma/client"
 import { PrismaMssql } from "@prisma/adapter-mssql"
 import bcrypt from "bcryptjs"
+import { LEGAL_DOCUMENTS } from "./legal-content"
 
 const adapter = new PrismaMssql(process.env.DATABASE_URL!)
 const prisma = new PrismaClient({ adapter })
@@ -218,12 +219,31 @@ async function main() {
   })
 
   console.log("✅ Platform admin oluşturuldu")
+
+  // ── Yasal Sözleşmeler ───────────────────────────────────────────────────────
+  for (const doc of LEGAL_DOCUMENTS) {
+    await prisma.legalDocument.upsert({
+      where: { id: doc.id },
+      update: { content: doc.content, title: doc.title, version: doc.version },
+      create: {
+        id: doc.id,
+        type: doc.type,
+        title: doc.title,
+        content: doc.content,
+        version: doc.version,
+        is_active: true,
+      },
+    })
+  }
+
+  console.log("✅ Yasal sözleşmeler oluşturuldu (5 adet)")
   console.log("")
   console.log("─────────────────────────────────────────")
   console.log("📌 Test giriş bilgileri:")
   console.log("   Kuaför panel: test@elit-kuafor.com / test1234")
   console.log("   Klinik panel: test@drmehmetkara.com / test1234")
   console.log("   Platform admin: tmkmuhendislik@gmail.com / Mehmet+123")
+  console.log("   Yasal sözleşmeler: KVKK, Gizlilik, Kullanım, Çerez, Mesafeli Satış")
   console.log("")
   console.log("🔗 Test URL'leri (dev):")
   console.log("   http://test-kuafor.localhost:3000")

@@ -271,6 +271,44 @@ model SupportTicket {
 }
 
 // ──────────────────────────────────────────────
+// LEGAL_DOCUMENTS — Yasal sözleşme metinleri
+// type: PRIVACY_POLICY | TERMS_OF_USE | COOKIE_POLICY | KVKK | DISTANCE_SALES
+// ──────────────────────────────────────────────
+model LegalDocument {
+  id         String   @id @default(uuid())
+  type       String   @db.NVarChar(50)
+  title      String   @db.NVarChar(255)
+  content    String   @db.NVarChar(Max) // HTML içerik
+  version    String   @db.NVarChar(20)  // "1.0", "1.1" vb.
+  is_active  Boolean  @default(true)    // sadece bir versiyon aktif olmalı
+  created_at DateTime @default(now())
+
+  consents UserConsent[]
+
+  @@map("LegalDocuments")
+}
+
+// ──────────────────────────────────────────────
+// USER_CONSENTS — Kullanıcı sözleşme onay kayıtları
+// user_type: TENANT | STAFF
+// ──────────────────────────────────────────────
+model UserConsent {
+  id          String   @id @default(uuid())
+  document_id String
+  user_type   String   @db.NVarChar(20)  // TENANT | STAFF
+  tenant_id   String?  // user_type TENANT ise dolu
+  staff_id    String?  // user_type STAFF ise dolu
+  user_email  String   @db.NVarChar(255)
+  ip_address  String   @db.NVarChar(100)
+  user_agent  String?  @db.NVarChar(Max)
+  accepted_at DateTime @default(now())
+
+  document LegalDocument @relation(fields: [document_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("UserConsents")
+}
+
+// ──────────────────────────────────────────────
 // SUPPORT_MESSAGES — Destek talebi mesajları
 // sender: TENANT | ADMIN
 // ──────────────────────────────────────────────
