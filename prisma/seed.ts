@@ -201,11 +201,29 @@ async function main() {
   })
 
   console.log("✅ Personel ve hizmetler oluşturuldu")
+
+  // ── Platform SUPER_ADMIN ────────────────────────────────────────────────────
+  const adminHash = await bcrypt.hash("Mehmet+123", 10)
+
+  await prisma.adminUser.upsert({
+    where: { email: "tmkmuhendislik@gmail.com" },
+    update: {},
+    create: {
+      email: "tmkmuhendislik@gmail.com",
+      password_hash: adminHash,
+      full_name: "Mehmet Kara",
+      role: "SUPER_ADMIN",
+      is_active: true,
+    },
+  })
+
+  console.log("✅ Platform admin oluşturuldu")
   console.log("")
   console.log("─────────────────────────────────────────")
   console.log("📌 Test giriş bilgileri:")
   console.log("   Kuaför panel: test@elit-kuafor.com / test1234")
   console.log("   Klinik panel: test@drmehmetkara.com / test1234")
+  console.log("   Platform admin: tmkmuhendislik@gmail.com / Mehmet+123")
   console.log("")
   console.log("🔗 Test URL'leri (dev):")
   console.log("   http://test-kuafor.localhost:3000")
