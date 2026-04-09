@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { notifyAppointmentCancelled } from "@/lib/notifications"
 import { notifyNextInWaitlist } from "@/lib/waitlist"
 import { notifyWaitlistSlotOpened } from "@/lib/notifications"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // GET /api/appointments/[id] — randevu detayı (müşteri doğrulaması: email ile)
 async function getHandler(
@@ -44,7 +45,8 @@ async function getHandler(
     service: appointment.service,
   })
 }
-export const GET = withErrorHandler(getHandler, "GET /api/appointments/[id]")
+const getWithError = withErrorHandler(getHandler, "GET /api/appointments/[id]")
+export const GET = withRateLimit(getWithError, "rl:appt-get", RATE_LIMITS.publicSlots)
 
 // PATCH /api/appointments/[id] — müşteri iptal
 // Body: { action: "cancel", email: "..." }
@@ -95,4 +97,5 @@ async function patchHandler(
 
   return ok({ cancelled: true })
 }
-export const PATCH = withErrorHandler(patchHandler, "PATCH /api/appointments/[id]")
+const patchWithError = withErrorHandler(patchHandler, "PATCH /api/appointments/[id]")
+export const PATCH = withRateLimit(patchWithError, "rl:appt-cancel", RATE_LIMITS.publicBooking)

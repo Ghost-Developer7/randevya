@@ -12,7 +12,7 @@ function getRedis() {
   return new Redis({ url, token })
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const host = req.headers.get("host") ?? ""
   const pathname = req.nextUrl.pathname
 
@@ -61,7 +61,7 @@ async function resolveTenant(host: string, req: NextRequest): Promise<string | n
   // 2. DB sorgusu için API route'a proxy — middleware edge'de Prisma çalıştıramaz
   //    tenant ID'yi app'e bir header aracılığıyla geçiriyoruz; asıl çözümleme
   //    layout.tsx içinde getTenantByHost() ile yapılır.
-  //    Bu middleware yalnızca custom domain → slug yönlendirmesini yapar.
+  //    Bu proxy yalnızca custom domain → slug yönlendirmesini yapar.
 
   // Custom domain mi? (app.randevya.com veya alt domain değil)
   const isCustomDomain =

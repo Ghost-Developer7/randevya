@@ -8,12 +8,12 @@
 export const COMPANY = {
   name: "Randevya Yazılım Hizmetleri",
   tradeTitle: "Randevya Yazılım Hizmetleri Tic. Ltd. Şti.",
-  address: "[Şirket adresi — güncellenecek]",
-  mersisNo: "[MERSİS numarası — güncellenecek]",
-  vergiDairesi: "[Vergi dairesi — güncellenecek]",
-  vergiNo: "[Vergi numarası — güncellenecek]",
+  address: "Örnek Mah. Test Cad. No:1 Daire:1, Kadıköy / İstanbul",
+  mersisNo: "0000000000000001",
+  vergiDairesi: "Kadıköy",
+  vergiNo: "0000000001",
   email: "destek@randevya.com",
-  phone: "[Telefon numarası — güncellenecek]",
+  phone: "+90 (212) 000 00 00",
   kvkkEmail: "kvkk@randevya.com",
   website: "https://randevya.com",
 }

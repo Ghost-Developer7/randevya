@@ -8,7 +8,6 @@
 
 import { redis } from "@/lib/redis"
 import { NextRequest, NextResponse } from "next/server"
-import { err } from "@/lib/api-helpers"
 
 export type RateLimitResult = {
   success: boolean     // istek kabul edildi mi?
@@ -124,10 +123,13 @@ export function withRateLimit<T extends AnyHandler>(
     const result = await rateLimit(key, config.limit, config.windowSec)
 
     if (!result.success) {
-      const response = err(
-        `Çok fazla istek gönderildi. ${Math.ceil((result.resetAt - Date.now()) / 1000)} saniye sonra tekrar deneyin.`,
-        429,
-        "RATE_LIMIT_EXCEEDED"
+      const response = NextResponse.json(
+        {
+          success: false,
+          error: `Çok fazla istek gönderildi. ${Math.ceil((result.resetAt - Date.now()) / 1000)} saniye sonra tekrar deneyin.`,
+          code: "RATE_LIMIT_EXCEEDED",
+        },
+        { status: 429 }
       )
       addRateLimitHeaders(response, result)
       return response

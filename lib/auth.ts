@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import { rateLimit } from "@/lib/rate-limit"
 
 // Desteklenen admin rolleri
 export type AdminRole = "SUPER_ADMIN" | "SUPPORT" | "BILLING" | "VIEWER"
@@ -51,6 +52,10 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.email || !credentials?.password) return null
 
         const email = credentials.email.toLowerCase().trim()
+
+        // ── Login rate limit: email başına 5 deneme / 15 dakika ──────────────
+        const rl = await rateLimit(`rl:login:${email}`, 5, 900)
+        if (!rl.success) return null
 
         // ── Admin kullanıcı kontrolü (DB'den) ────────────────────────────────
         const adminUser = await db.adminUser.findFirst({

@@ -19,7 +19,11 @@
       "Bash(mkdir -p /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api/panel/staff/[id]/photo)",
       "Bash(mkdir -p /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api/panel/settings/webhooks/[id])",
       "Bash(mkdir -p /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api/admin/plans/[id])",
-      "Bash(mkdir -p /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api/admin/tenants/[id]/stats)"
+      "Bash(mkdir -p /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api/admin/tenants/[id]/stats)",
+      "Bash(npm run:*)",
+      "Bash(node -e \":*)",
+      "Bash(xargs grep:*)",
+      "Bash(taskkill /PID 46404 /F)"
     ]
   }
 }

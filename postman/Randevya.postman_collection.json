@@ -1,0 +1,2427 @@
+{
+  "info": {
+    "_postman_id": "randevya-api-v1",
+    "name": "Randevya API",
+    "description": "# Randevya — Full API Collection\n\n## Kullanım Sırası\n1. **Environment** olarak `Randevya — Local` seçin\n2. **Postman → Settings → Cookies** altında `localhost` için cookie yakalamayı etkinleştirin\n3. **0. Auth** klasöründen sırayla ilerleyin: CSRF al → Login yap\n4. Her klasörün üstündeki açıklamayı okuyun\n5. Yeşil checkmark olan request'ler otomatik olarak ortam değişkenlerini doldurur\n\n## x-tenant-id Header\nPublic endpoint'ler `x-tenant-id: slug:{{tenant_slug}}` header'ı gerektirir.\nBu header tüm public klasörlerde **folder pre-request script** ile otomatik eklenir.\nOrta değiştirmek için sadece `tenant_slug` environment variable'ını güncelleyin.\n\n## Kimlik Doğrulama\nPanel ve Admin endpoint'leri NextAuth cookie session kullanır.\nPostman otomatik olarak cookie'leri yönetir — login sonrası otomatik çalışır.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 0. Auth — Giriş & Oturum",
+      "description": "## Sıra\n1. GET CSRF Token (Tenant) → csrf_token dolar\n2. POST Login as Tenant → session cookie set edilir\n3. GET CSRF Token (Admin) → csrf_token güncellenir\n4. POST Login as Admin → admin session cookie set edilir\n\nHer login işleminden önce CSRF token alınmalıdır.",
+      "item": [
+        {
+          "name": "GET CSRF Token (Tenant Login için)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.csrfToken) {",
+                  "    pm.environment.set('csrf_token', data.csrfToken);",
+                  "    console.log('CSRF token kaydedildi:', data.csrfToken);",
+                  "}",
+                  "pm.test('CSRF token alındı', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(data.csrfToken).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/csrf",
+            "description": "NextAuth CSRF token'ı alır. Login formundan önce çalıştırılmalı."
+          }
+        },
+        {
+          "name": "POST Login as Tenant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login başarılı (200 veya redirect)', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});",
+                  "",
+                  "// Session cookie'yi environment'a kaydet",
+                  "const sessionCookie = pm.cookies.get('next-auth.session-token');",
+                  "if (sessionCookie) {",
+                  "    pm.environment.set('tenant_session_token', sessionCookie);",
+                  "    console.log('Tenant session cookie kaydedildi');",
+                  "} else {",
+                  "    console.warn('Session cookie bulunamadı — Postman cookie jar aktif mi?');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "{{csrf_token}}"
+                },
+                {
+                  "key": "email",
+                  "value": "{{tenant_email}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{tenant_password}}"
+                },
+                {
+                  "key": "callbackUrl",
+                  "value": "{{base_url}}/panel"
+                },
+                {
+                  "key": "json",
+                  "value": "true"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/auth/callback/credentials",
+            "description": "Tenant sahibi olarak giriş yapar. Başarılı olunca `next-auth.session-token` cookie set edilir.\n\nÖncesinde: GET CSRF Token çalıştırılmış olmalı."
+          }
+        },
+        {
+          "name": "GET CSRF Token (Admin Login için)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "if (data.csrfToken) {",
+                  "    pm.environment.set('csrf_token', data.csrfToken);",
+                  "    console.log('Admin CSRF token kaydedildi:', data.csrfToken);",
+                  "}",
+                  "pm.test('CSRF token alındı', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/csrf",
+            "description": "Admin login'den önce CSRF token'ı yeniler."
+          }
+        },
+        {
+          "name": "POST Login as Admin (SUPER_ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login başarılı', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});",
+                  "",
+                  "const sessionCookie = pm.cookies.get('next-auth.session-token');",
+                  "if (sessionCookie) {",
+                  "    pm.environment.set('admin_session_token', sessionCookie);",
+                  "    console.log('Admin session cookie kaydedildi');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "{{csrf_token}}"
+                },
+                {
+                  "key": "email",
+                  "value": "{{admin_email}}"
+                },
+                {
+                  "key": "password",
+                  "value": "{{admin_password}}"
+                },
+                {
+                  "key": "callbackUrl",
+                  "value": "{{base_url}}/admin"
+                },
+                {
+                  "key": "json",
+                  "value": "true"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/auth/callback/credentials",
+            "description": "Platform admin olarak giriş yapar. Seed'den gelen: tmkmuhendislik@gmail.com / Mehmet+123"
+          }
+        },
+        {
+          "name": "GET Session Bilgisi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Session aktif', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "    pm.expect(data).to.have.property('user');",
+                  "});",
+                  "if (data.user) {",
+                  "    console.log('Giriş yapan:', data.user.email, '| Rol:', data.user.role);",
+                  "    if (data.user.tenant_id) pm.environment.set('tenant_id', data.user.tenant_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/auth/session",
+            "description": "Mevcut oturumun bilgilerini döner. tenant_id otomatik kaydedilir."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📝 1. Kayıt — Yeni İşletme",
+      "description": "## Sıra\n1. Önce yasal belgeler listesini çek (tip adlarını öğren)\n2. Register isteği gönder (consents array'ine tip adlarını ekle)\n\nBaşarılı kayıt sonrası tenant_id ve tenant_slug otomatik kaydedilir.",
+      "item": [
+        {
+          "name": "GET Yasal Belgeler (Register öncesi)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Yasal belgeler listesi geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    const types = data.data.map(d => d.type);",
+                  "    console.log('Mevcut belge tipleri:', types.join(', '));",
+                  "    console.log('Zorunlu onaylar: KVKK, PRIVACY_POLICY, TERMS_OF_USE, DISTANCE_SALES');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal",
+            "description": "Aktif yasal belgeler listesi (içerik yok, sadece meta). Register sırasında consents array'i için gerekli."
+          }
+        },
+        {
+          "name": "POST Yeni İşletme Kaydı",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Kayıt başarılı (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('tenant_id', data.data.id);",
+                  "    pm.environment.set('tenant_slug', data.data.domain_slug);",
+                  "    console.log('Tenant ID:', data.data.id);",
+                  "    console.log('Slug:', data.data.domain_slug);",
+                  "    console.log('Panel URL:', data.data.panel_url);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"Test İşletme\",\n  \"sector\": \"Güzellik & Bakım\",\n  \"owner_name\": \"Test Kullanıcı\",\n  \"owner_email\": \"{{tenant_email}}\",\n  \"password\": \"{{tenant_password}}\",\n  \"domain_slug\": \"{{tenant_slug}}\",\n  \"consents\": [\"KVKK\", \"PRIVACY_POLICY\", \"TERMS_OF_USE\", \"DISTANCE_SALES\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/auth/register",
+            "description": "Yeni işletme kaydı. consents array'i zorunlu — tüm 4 belgenin onayı gerekir.\n\nRate limit: 3 istek/saat."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌐 2. Public — Tenant & Keşif",
+      "description": "Tenant'ın config'ini, personelini ve hizmetlerini sorgular.\n\n**x-tenant-id header folder pre-request ile otomatik eklenir.**",
+      "item": [
+        {
+          "name": "GET Tenant Config & Tema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Tenant config geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('tenant_id', data.data.id);",
+                  "    console.log('Tenant:', data.data.company_name, '| Sektör:', data.data.sector);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/tenant",
+            "description": "İşletmenin config ve tema bilgilerini döner. Müşteri yükleme sayfasının ilk isteği budur."
+          }
+        },
+        {
+          "name": "GET Hizmetler Listesi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Hizmetler geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('service_id', data.data[0].id);",
+                  "    console.log('İlk hizmet ID kaydedildi:', data.data[0].id, '|', data.data[0].name);",
+                  "    console.log('Toplam hizmet:', data.data.length);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/services",
+            "description": "Tenant'ın aktif hizmetlerini listeler. İlk hizmet ID'si otomatik kaydedilir."
+          }
+        },
+        {
+          "name": "GET Hizmetler (Personele göre filtreli)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/services?staffId={{staff_id}}",
+            "description": "Belirli bir personelin verdiği hizmetleri filtreler."
+          }
+        },
+        {
+          "name": "GET Personel Listesi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Personel listesi geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('staff_id', data.data[0].id);",
+                  "    console.log('İlk personel ID kaydedildi:', data.data[0].id, '|', data.data[0].full_name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/staff",
+            "description": "Aktif personel listesi. İlk personel ID'si otomatik kaydedilir."
+          }
+        },
+        {
+          "name": "GET Personel (Hizmete göre filtreli)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/staff?serviceId={{service_id}}",
+            "description": "Belirli hizmeti verebilen personeli filtreler."
+          }
+        },
+        {
+          "name": "GET Müsait Slotlar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Slotlar geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    const first = data.data[0];",
+                  "    pm.environment.set('test_start_time', first.start);",
+                  "    pm.environment.set('test_end_time', first.end);",
+                  "    pm.environment.set('staff_id', first.staff_id);",
+                  "    console.log('İlk slot:', first.start, '→', first.end, '|', first.staff_name);",
+                  "    console.log('test_start_time ve test_end_time güncellendi');",
+                  "} else {",
+                  "    console.warn('Müsait slot yok — test_date, service_id, staff_id kontrol edin');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/slots?serviceId={{service_id}}&date={{test_date}}&staffId={{staff_id}}",
+            "description": "Belirli tarih ve hizmet için müsait slotları döner.\n\n**İlk slot otomatik olarak test_start_time / test_end_time / staff_id değişkenlerine kaydedilir.**\n\nRate limit: 30/dk."
+          }
+        },
+        {
+          "name": "GET Müsait Slotlar (Tüm personel)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/slots?serviceId={{service_id}}&date={{test_date}}",
+            "description": "staffId olmadan — o hizmeti veren tüm personelin müsait slotlarını döner."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 3. Public — Randevular (Müşteri)",
+      "description": "Müşterinin randevu oluşturma, görüntüleme ve iptal akışı.\n\n**Önerilen sıra:**\n1. Slot Sorgula (2. klasörden)\n2. Randevu Oluştur\n3. Randevu Detayı Görüntüle\n4. Randevu İptal Et (müşteri)",
+      "item": [
+        {
+          "name": "POST Randevu Oluştur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Randevu oluşturuldu (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('appointment_id', data.data.id);",
+                  "    console.log('Randevu ID:', data.data.id);",
+                  "    console.log('Başlangıç:', data.data.start_time);",
+                  "    console.log('Durum:', data.data.status);",
+                  "}",
+                  "if (!data.success) {",
+                  "    console.error('Hata:', data.error, '| Kod:', data.code);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_id\": \"{{service_id}}\",\n  \"staff_id\": \"{{staff_id}}\",\n  \"start_time\": \"{{test_start_time}}\",\n  \"customer_name\": \"{{customer_name}}\",\n  \"customer_phone\": \"{{customer_phone}}\",\n  \"customer_email\": \"{{customer_email}}\",\n  \"notes\": \"Postman test randevusu\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/appointments",
+            "description": "Müşteri randevusu oluşturur. Başarılı olunca email + WhatsApp + SMS bildirimleri tetiklenir.\n\nÖncesinde: Slot sorgusu yapılmış ve test_start_time dolu olmalı.\n\nRate limit: 10/dk."
+          }
+        },
+        {
+          "name": "GET Randevu Detayı (Email ile doğrulama)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Randevu detayı geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success) {",
+                  "    console.log('Müşteri:', data.data.customer_name);",
+                  "    console.log('Hizmet:', data.data.service.name);",
+                  "    console.log('Personel:', data.data.staff.full_name);",
+                  "    console.log('Durum:', data.data.status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "url": "{{base_url}}/api/appointments/{{appointment_id}}?email={{customer_email}}",
+            "description": "Müşteri email doğrulaması ile randevu detayını görüntüler. Email parametresi zorunlu — yetkisiz erişimi engeller."
+          }
+        },
+        {
+          "name": "PATCH Randevu İptal Et (Müşteri)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('İptal işlemi', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 422, 404]);",
+                  "});",
+                  "if (data.success) console.log('Randevu iptal edildi');",
+                  "if (!data.success) console.warn('İptal edilemedi:', data.error);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"cancel\",\n  \"email\": \"{{customer_email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/appointments/{{appointment_id}}",
+            "description": "Müşteri kendi randevusunu iptal eder. Email doğrulaması ile güvenli.\n\n⚠️ Randevuya 2 saatten az kaldıysa 422 döner.\n\nİptal sonrası bekleme listesindeki bir sonraki kişiye otomatik bildirim gider."
+          }
+        }
+      ]
+    },
+    {
+      "name": "⏳ 4. Public — Bekleme Listesi",
+      "description": "Dolu randevular için bekleme listesi akışı.\n\n**Sıra:**\n1. Bekleme Listesine Ekle → waitlist_entry_id dolar\n2. Slot açılınca (iptal olunca) email linki ile Onayla çağrılır",
+      "item": [
+        {
+          "name": "POST Bekleme Listesine Ekle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Bekleme listesine eklendi (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('waitlist_entry_id', data.data.id);",
+                  "    console.log('Waitlist Entry ID:', data.data.id);",
+                  "    console.log('Sıra no:', data.data.queue_order);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "slug:{{tenant_slug}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointment_id\": \"{{appointment_id}}\",\n  \"customer_name\": \"Bekleyen Müşteri\",\n  \"customer_phone\": \"05559876543\",\n  \"customer_email\": \"bekleyen@test.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/waitlist",
+            "description": "Dolu bir randevunun bekleme listesine ekler. Plan'da waitlist_enabled=true olmalı."
+          }
+        },
+        {
+          "name": "GET Bekleme Slotunu Onayla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Onay işlemi', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 410]);",
+                  "});",
+                  "console.log(data.success ? 'Onaylandı: ' + data.data.message : 'Onaylanamadı: ' + data.error);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/waitlist/confirm?entry={{waitlist_entry_id}}&tenant={{tenant_id}}",
+            "description": "Bekleme listesi emailindeki link ile slot onaylanır. 30 dakika expire süresi var — sonrası 410 döner."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 5. Public — Yasal Belgeler",
+      "description": "Yasal belge içeriklerini sorgular. Frontend kayıt formunda kullanır.",
+      "item": [
+        {
+          "name": "GET Yasal Belgeler Listesi (Meta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Belgeler listelendi', () => pm.response.to.have.status(200));",
+                  "if (data.success) {",
+                  "    data.data.forEach(d => console.log(d.type, '|', d.title, '| v' + d.version));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal",
+            "description": "Aktif yasal belgeler meta listesi (HTML içerik olmadan)."
+          }
+        },
+        {
+          "name": "GET KVKK Aydınlatma Metni",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal/KVKK",
+            "description": "KVKK aydınlatma metninin tam HTML içeriği."
+          }
+        },
+        {
+          "name": "GET Gizlilik Politikası",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal/PRIVACY_POLICY"
+          }
+        },
+        {
+          "name": "GET Kullanım Koşulları",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal/TERMS_OF_USE"
+          }
+        },
+        {
+          "name": "GET Çerez Politikası",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal/COOKIE_POLICY"
+          }
+        },
+        {
+          "name": "GET Mesafeli Satış Sözleşmesi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/legal/DISTANCE_SALES"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 6. Panel — Dashboard & Analitik",
+      "description": "## Gereksinim\nTenant oturumu açık olmalı (Auth klasöründen Login as Tenant)\n\n## Sıra\n1. Dashboard (özet istatistikler)\n2. Analytics (detaylı grafikler)",
+      "item": [
+        {
+          "name": "GET Dashboard İstatistikleri",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Dashboard geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data) {",
+                  "    const d = data.data;",
+                  "    console.log('Bugün:', d.today_count, '| Bu hafta:', d.week_count);",
+                  "    console.log('Bu ay:', d.month_count, '| Toplam:', d.total_count);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/dashboard",
+            "description": "Bugün, bu hafta, bu ay randevu sayıları ve durum dağılımı."
+          }
+        },
+        {
+          "name": "GET Analitik (7 Gün)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Analitik geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data) {",
+                  "    console.log('Günlük randevular:', data.data.daily_appointments?.length, 'gün');",
+                  "    console.log('Top hizmetler:', data.data.top_services?.map(s => s.name).join(', '));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/analytics?period=7d",
+            "description": "7 günlük analitik: günlük randevular, durum dağılımı, en çok tercih edilen hizmet/personel, yoğun saatler."
+          }
+        },
+        {
+          "name": "GET Analitik (30 Gün)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/analytics?period=30d"
+          }
+        },
+        {
+          "name": "GET Analitik (90 Gün)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/analytics?period=90d"
+          }
+        },
+        {
+          "name": "GET Analitik (1 Yıl)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/analytics?period=365d"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 7. Panel — Randevular (İşletme)",
+      "description": "İşletme tarafından randevu yönetimi. Takvim görünümü, durum değiştirme, yeniden zamanlama.",
+      "item": [
+        {
+          "name": "GET Randevular Listesi (Bu hafta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Randevular geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('appointment_id', data.data[0].id);",
+                  "    console.log('İlk randevu ID kaydedildi:', data.data[0].id);",
+                  "    console.log('Toplam randevu:', data.data.length);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/appointments",
+            "description": "Bu haftanın randevuları (from/to olmadan default bu hafta)."
+          }
+        },
+        {
+          "name": "GET Randevular (Tarih Aralığı + Filtre)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/appointments?from={{test_date}}&to={{test_date}}&status=CONFIRMED,PENDING&staffId={{staff_id}}",
+            "description": "Tarih aralığı, durum ve personele göre filtreli randevu listesi."
+          }
+        },
+        {
+          "name": "PATCH Randevu Onayla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Onaylama işlemi', () => pm.response.to.have.status(200));",
+                  "if (data.success) console.log('Randevu onaylandı:', data.data.id, '| Durum:', data.data.status);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}",
+            "description": "Durum: CONFIRMED | CANCELLED | COMPLETED | NO_SHOW"
+          }
+        },
+        {
+          "name": "PATCH Randevu Tamamlandı",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}"
+          }
+        },
+        {
+          "name": "PATCH Randevu İptal Et (İşletme)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}",
+            "description": "İptal sonrası bekleme listesindeki bir sonraki kişiye otomatik bildirim gider."
+          }
+        },
+        {
+          "name": "PATCH Randevu Gelmedi (No-Show)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"NO_SHOW\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}"
+          }
+        },
+        {
+          "name": "PATCH Randevu Yeniden Zamanla",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Yeniden zamanlama', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 409]);",
+                  "});",
+                  "if (data.success) console.log('Yeni zaman:', data.data.start_time);",
+                  "if (!data.success) console.warn('Slot dolu veya geçersiz:', data.error);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"reschedule\",\n  \"start_time\": \"2026-04-21T11:00:00\",\n  \"end_time\": \"2026-04-21T11:30:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}",
+            "description": "Randevuyu yeni bir slot'a taşır. Çakışma kontrolü yapılır, kendisi hariç tutulur."
+          }
+        },
+        {
+          "name": "PATCH Randevu Notu Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"notes\",\n  \"notes\": \"Müşteri hassas cilt, özel ürün kullanılacak.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/appointments/{{appointment_id}}",
+            "description": "Dahili not ekler/günceller (müşteriye görünmez)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 8. Panel — Personel Yönetimi",
+      "description": "Personel CRUD işlemleri. Personel oluştururken staff_id otomatik kaydedilir.",
+      "item": [
+        {
+          "name": "GET Personel Listesi (Panel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Personel listesi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('staff_id', data.data[0].id);",
+                  "    console.log('Personel:', data.data.map(s => s.full_name).join(', '));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/staff"
+          }
+        },
+        {
+          "name": "POST Personel Ekle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Personel eklendi (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('staff_id', data.data.id);",
+                  "    console.log('Personel ID:', data.data.id, '|', data.data.full_name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ayşe Kaya\",\n  \"title\": \"Uzman Kuaför\",\n  \"work_hours\": {\n    \"mon\": [{\"start\": \"09:00\", \"end\": \"18:00\"}],\n    \"tue\": [{\"start\": \"09:00\", \"end\": \"18:00\"}],\n    \"wed\": [{\"start\": \"09:00\", \"end\": \"18:00\"}],\n    \"thu\": [{\"start\": \"09:00\", \"end\": \"18:00\"}],\n    \"fri\": [{\"start\": \"09:00\", \"end\": \"17:00\"}],\n    \"sat\": [{\"start\": \"10:00\", \"end\": \"15:00\"}],\n    \"sun\": []\n  },\n  \"service_ids\": [\"{{service_id}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/staff",
+            "description": "work_hours: her gün için {start, end} array'i. Boş array = kapalı.\nservice_ids: personelin vereceği hizmetler."
+          }
+        },
+        {
+          "name": "PATCH Personel Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Baş Kuaför\",\n  \"work_hours\": {\n    \"mon\": [{\"start\": \"10:00\", \"end\": \"19:00\"}],\n    \"tue\": [{\"start\": \"10:00\", \"end\": \"19:00\"}],\n    \"wed\": [{\"start\": \"10:00\", \"end\": \"19:00\"}],\n    \"thu\": [{\"start\": \"10:00\", \"end\": \"19:00\"}],\n    \"fri\": [{\"start\": \"10:00\", \"end\": \"18:00\"}],\n    \"sat\": [],\n    \"sun\": []\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/staff/{{staff_id}}"
+          }
+        },
+        {
+          "name": "DELETE Personel (Pasife Al)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/staff/{{staff_id}}",
+            "description": "Fiziksel silme yapmaz — is_active=false yapar."
+          }
+        },
+        {
+          "name": "POST Personel Fotoğrafı Yükle",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "JPG/PNG/WEBP, max 4MB"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/panel/staff/{{staff_id}}/photo",
+            "description": "Cloudinary'ye yükler. Max 600x600px, WebP/AVIF otomatik dönüşüm.\nİçin: file alanına fotoğraf seç."
+          }
+        },
+        {
+          "name": "DELETE Personel Fotoğrafı",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/staff/{{staff_id}}/photo"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛎 9. Panel — Hizmet Yönetimi",
+      "description": "Hizmet CRUD. Oluşturulan hizmetin service_id'si otomatik kaydedilir.",
+      "item": [
+        {
+          "name": "GET Hizmetler (Panel)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Hizmetler geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('service_id', data.data[0].id);",
+                  "    console.log('Hizmetler:', data.data.map(s => s.name + ' (' + s.duration_min + 'dk)').join(', '));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/services"
+          }
+        },
+        {
+          "name": "POST Hizmet Ekle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Hizmet eklendi (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('service_id', data.data.id);",
+                  "    console.log('Hizmet ID:', data.data.id, '|', data.data.name);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Saç Kesim\",\n  \"description\": \"Profesyonel saç kesim hizmeti\",\n  \"duration_min\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/services"
+          }
+        },
+        {
+          "name": "PATCH Hizmet Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Saç Kesim & Şekillendirme\",\n  \"duration_min\": 45\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/services/{{service_id}}"
+          }
+        },
+        {
+          "name": "DELETE Hizmet (Pasife Al)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/services/{{service_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚙️ 10. Panel — Ayarlar",
+      "description": "Profil, logo, tema, kapalı günler, webhook ayarları.",
+      "item": [
+        {
+          "name": "GET Profil Bilgileri",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/profile",
+            "description": "İşletme sahibinin profil bilgileri."
+          }
+        },
+        {
+          "name": "PATCH Profil Güncelle (Ad & Email)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner_name\": \"Yeni Ad Soyad\",\n  \"owner_email\": \"yeni@test.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/profile"
+          }
+        },
+        {
+          "name": "PATCH Şifre Değiştir",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"{{tenant_password}}\",\n  \"new_password\": \"YeniSifre123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/profile",
+            "description": "current_password bcrypt ile doğrulanır."
+          }
+        },
+        {
+          "name": "POST Logo Yükle",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "",
+                  "description": "JPG/PNG/WEBP/SVG, max 4MB"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/panel/settings/logo",
+            "description": "Cloudinary'ye yükler. Max 400x400px, WebP dönüşümü."
+          }
+        },
+        {
+          "name": "DELETE Logo Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/logo"
+          }
+        },
+        {
+          "name": "PATCH Tema Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"primary_color\": \"#6366f1\",\n  \"secondary_color\": \"#f59e0b\",\n  \"font\": \"Poppins\",\n  \"border_radius\": \"8px\",\n  \"tagline\": \"Güzelliğiniz için buradayız\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/theme",
+            "description": "Tema değiştiğinde Redis cache invalidate edilir."
+          }
+        },
+        {
+          "name": "GET Kapalı Günler",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/closed-days"
+          }
+        },
+        {
+          "name": "POST Kapalı Gün Ekle (Tüm İşletme)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Kapalı gün eklendi', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) pm.environment.set('closed_day_id', data.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-05-01\",\n  \"reason\": \"İşçi Bayramı — tüm işletme kapalı\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/closed-days"
+          }
+        },
+        {
+          "name": "POST Kapalı Gün Ekle (Belirli Personel)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-05-10\",\n  \"staff_id\": \"{{staff_id}}\",\n  \"reason\": \"Personel izni\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/closed-days"
+          }
+        },
+        {
+          "name": "DELETE Kapalı Gün Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/closed-days/{{closed_day_id}}"
+          }
+        },
+        {
+          "name": "GET Webhook Endpoint'leri",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Webhooklar geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('webhook_endpoint_id', data.data[0].id);",
+                  "    console.log('Webhook URL:', data.data[0].url, '| Aktif:', data.data[0].is_active);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/webhooks",
+            "description": "Secret'lar maskeli (son 4 karakter gösterilir)."
+          }
+        },
+        {
+          "name": "POST Webhook Endpoint Ekle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Webhook eklendi (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('webhook_endpoint_id', data.data.id);",
+                  "    console.log('Webhook ID:', data.data.id);",
+                  "    console.log('Secret (bir kez gösterilir):', data.data.secret);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://webhook.site/test\",\n  \"events\": [\"appointment.created\", \"appointment.cancelled\", \"appointment.confirmed\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/webhooks",
+            "description": "HTTPS zorunlu. Secret otomatik üretilir (bir kez döner — kaydet!).\nevents: appointment.created | confirmed | cancelled | completed | rescheduled | waitlist.notified | waitlist.confirmed | * (hepsi)"
+          }
+        },
+        {
+          "name": "PATCH Webhook Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false,\n  \"events\": [\"appointment.created\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/settings/webhooks/{{webhook_endpoint_id}}"
+          }
+        },
+        {
+          "name": "DELETE Webhook Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/webhooks/{{webhook_endpoint_id}}"
+          }
+        },
+        {
+          "name": "GET Webhook Teslimat Geçmişi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/webhooks/{{webhook_endpoint_id}}?logs=true",
+            "description": "Son webhook teslimat logları (başarı/hata, durum kodu, payload)."
+          }
+        },
+        {
+          "name": "GET Sözleşme Onay Geçmişi",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/settings/consents",
+            "description": "İşletmenin onayladığı yasal belgeler + IP + tarih."
+          }
+        }
+      ]
+    },
+    {
+      "name": "💳 11. Panel — Abonelik",
+      "description": "Mevcut plan ve ödeme geçmişi.",
+      "item": [
+        {
+          "name": "GET Mevcut Abonelik",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Abonelik geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('plan_id', data.data.plan?.id || '');",
+                  "    console.log('Plan:', data.data.plan?.name, '| Durum:', data.data.status);",
+                  "    console.log('Bitiş:', data.data.ends_at);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/subscription"
+          }
+        },
+        {
+          "name": "GET Ödeme Geçmişi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Ödeme geçmişi geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('subscription_id', data.data[0].id);",
+                  "    console.log('Son ödeme:', data.data[0].starts_at, '| Durum:', data.data[0].status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/subscription/history"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 12. Panel — Destek Talepleri",
+      "description": "Tenant'ın destek talebi açma ve mesajlaşma akışı.",
+      "item": [
+        {
+          "name": "GET Destek Taleplerim",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Talepler geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('support_ticket_id', data.data[0].id);",
+                  "    console.log('Son talep:', data.data[0].subject, '| Durum:', data.data[0].status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/support"
+          }
+        },
+        {
+          "name": "POST Yeni Destek Talebi Aç",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Talep oluşturuldu (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) {",
+                  "    pm.environment.set('support_ticket_id', data.data.id);",
+                  "    console.log('Ticket ID:', data.data.id);",
+                  "    console.log('Admin'lere bildirim emaili gönderildi');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"WhatsApp bildirimleri gelmiyor\",\n  \"message\": \"Merhaba, müşterilerime WhatsApp üzerinden bildirim gitmiyormuş gibi görünüyor. Kontrol edebilir misiniz?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/support",
+            "description": "Talep açılınca SUPER_ADMIN ve SUPPORT rolündeki adminlere email bildirimi gider."
+          }
+        },
+        {
+          "name": "GET Destek Talebi Detayı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/panel/support/{{support_ticket_id}}"
+          }
+        },
+        {
+          "name": "POST Destek Talebine Yanıt Yaz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Teşekkürler, META Business hesabımı kontrol edeceğim.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/panel/support/{{support_ticket_id}}",
+            "description": "Tenant yanıt ekler. Talep otomatik olarak OPEN durumuna döner, adminlere email gider."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🏢 13. Admin — Tenant Yönetimi",
+      "description": "## Gereksinim\nAdmin oturumu açık olmalı (Auth → Login as Admin)\n\nTüm Admin endpoint'leri PLATFORM_ADMIN session gerektirir.",
+      "item": [
+        {
+          "name": "GET Tenant Listesi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Tenant listesi geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    const t = data.data[0];",
+                  "    pm.environment.set('tenant_id', t.id);",
+                  "    console.log('Toplam tenant:', data.data.length);",
+                  "    console.log('İlk tenant:', t.company_name, '|', t.domain_slug);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/tenants?page=1&limit=20",
+            "description": "Filtreler: ?search=xxx&plan=xxx&is_active=true&page=1&limit=20"
+          }
+        },
+        {
+          "name": "GET Tenant Detayı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/tenants/{{tenant_id}}"
+          }
+        },
+        {
+          "name": "PATCH Tenant Aktif/Pasif",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/tenants/{{tenant_id}}",
+            "description": "is_active=false → işletme erişimi kesilir."
+          }
+        },
+        {
+          "name": "GET Tenant Detaylı İstatistikleri",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Tenant stats geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data) {",
+                  "    const d = data.data;",
+                  "    console.log('Toplam randevu:', d.total_appointments);",
+                  "    console.log('Personel:', d.staff_count, '| Hizmet:', d.service_count);",
+                  "    console.log('Bu ay gelir:', d.revenue_this_month);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/tenants/{{tenant_id}}/stats",
+            "description": "8 paralel sorguyla tenant hakkında kapsamlı istatistikler."
+          }
+        },
+        {
+          "name": "GET Tenant Abonelik Geçmişi (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Abonelik geçmişi geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('subscription_id', data.data[0].id);",
+                  "    console.log('Son abonelik:', data.data[0].plan?.name, '| Durum:', data.data[0].status);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/tenants/{{tenant_id}}/subscriptions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📦 14. Admin — Plan Yönetimi",
+      "description": "Abonelik planları CRUD.",
+      "item": [
+        {
+          "name": "GET Plan Listesi",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Planlar geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('plan_id', data.data[0].id);",
+                  "    data.data.forEach(p => console.log(p.name, '|', p.price_monthly, '₺/ay | WA:', p.whatsapp_enabled));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/plans"
+          }
+        },
+        {
+          "name": "POST Plan Oluştur",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Plan oluşturuldu (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) pm.environment.set('plan_id', data.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pro\",\n  \"price_monthly\": 299.99,\n  \"max_staff\": 10,\n  \"max_services\": 30,\n  \"whatsapp_enabled\": true,\n  \"custom_domain\": true,\n  \"waitlist_enabled\": true,\n  \"analytics\": true,\n  \"priority_support\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/plans"
+          }
+        },
+        {
+          "name": "GET Plan Detayı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/plans/{{plan_id}}"
+          }
+        },
+        {
+          "name": "PATCH Plan Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price_monthly\": 349.99,\n  \"priority_support\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/plans/{{plan_id}}"
+          }
+        },
+        {
+          "name": "DELETE Plan Sil",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/admin/plans/{{plan_id}}",
+            "description": "Aktif abonesi olan plan silinemez (409 döner)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "💰 15. Admin — Abonelik & İade",
+      "description": "PayTR üzerinden ödeme iadesi.",
+      "item": [
+        {
+          "name": "POST Abonelik İadesi (PayTR)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('İade işlemi', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                  "});",
+                  "if (data.success) console.log('İade başarılı:', data.data.refund_amount, 'kuruş');",
+                  "if (!data.success) console.warn('İade başarısız:', data.error);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 29999\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/subscriptions/{{subscription_id}}/refund",
+            "description": "amount: kuruş cinsinden (299.99₺ = 29999). Boş bırakılırsa plan fiyatı kullanılır.\n\nBillingAccess rolü gerektirir (SUPER_ADMIN veya BILLING)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎫 16. Admin — Destek Yönetimi",
+      "description": "Tüm tenant'ların destek taleplerini görme ve yanıtlama.",
+      "item": [
+        {
+          "name": "GET Tüm Destek Talepleri",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Talepler geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('support_ticket_id', data.data[0].id);",
+                  "    console.log('Açık talepler:', data.data.filter(t => t.status === 'OPEN').length);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/support?status=OPEN&priority=HIGH",
+            "description": "Filtreler: ?status=OPEN|IN_PROGRESS|RESOLVED|CLOSED&priority=LOW|NORMAL|HIGH|URGENT&tenantId=xxx"
+          }
+        },
+        {
+          "name": "GET Destek Talebi Detayı (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/support/{{support_ticket_id}}"
+          }
+        },
+        {
+          "name": "POST Admin Yanıtı Yaz",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Merhaba, sorununuzu inceledik. WhatsApp Cloud API token'ınızın süresi dolmuş olabilir. Panel → Ayarlar → Entegrasyonlar bölümünden token'ı yenileyin.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/support/{{support_ticket_id}}",
+            "description": "Admin yanıt yazar. Tenant'a email bildirimi gider."
+          }
+        },
+        {
+          "name": "PATCH Talep Durumunu Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"RESOLVED\",\n  \"priority\": \"NORMAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/support/{{support_ticket_id}}",
+            "description": "status: OPEN | IN_PROGRESS | RESOLVED | CLOSED\npriority: LOW | NORMAL | HIGH | URGENT"
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 17. Admin — Kullanıcı Yönetimi",
+      "description": "Platform admin kullanıcıları CRUD. Sadece SUPER_ADMIN erişebilir.",
+      "item": [
+        {
+          "name": "GET Admin Kullanıcıları",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Admin kullanıcılar geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('admin_user_id', data.data[0].id);",
+                  "    data.data.forEach(u => console.log(u.email, '|', u.role, '| Aktif:', u.is_active));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/users"
+          }
+        },
+        {
+          "name": "POST Admin Kullanıcı Ekle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Admin kullanıcı oluşturuldu (201)', () => pm.response.to.have.status(201));",
+                  "if (data.success && data.data) pm.environment.set('admin_user_id', data.data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"destek@randevya.com\",\n  \"password\": \"Destek2024!\",\n  \"full_name\": \"Destek Personeli\",\n  \"role\": \"SUPPORT\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/users",
+            "description": "Roller: SUPER_ADMIN | SUPPORT | BILLING | VIEWER"
+          }
+        },
+        {
+          "name": "PATCH Admin Kullanıcı Güncelle",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"BILLING\",\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/users/{{admin_user_id}}"
+          }
+        },
+        {
+          "name": "DELETE Admin Kullanıcıyı Deaktive Et",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/admin/users/{{admin_user_id}}",
+            "description": "Fiziksel silme yapmaz — is_active=false yapar. Aktif session'lar geçersiz olmaz."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔍 18. Admin — Hata Logları",
+      "description": "Sistem hata kayıtlarını görüntüleme ve temizleme.",
+      "item": [
+        {
+          "name": "GET Hata Logları",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Hata logları geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    console.log('Toplam hata:', data.data.length);",
+                  "    data.data.slice(0, 3).forEach(e => {",
+                  "        console.log('[' + e.created_at + ']', e.method, e.endpoint, '→', e.status_code);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/error-logs?page=1&limit=50",
+            "description": "Filtreler: ?tenantId=xxx&search=xxx&from=YYYY-MM-DD&to=YYYY-MM-DD&method=POST&page=1&limit=50"
+          }
+        },
+        {
+          "name": "GET Hata Logları (POST hataları)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/error-logs?method=POST&limit=20"
+          }
+        },
+        {
+          "name": "DELETE Eski Hata Loglarını Temizle",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Temizlik tamamlandı', () => pm.response.to.have.status(200));",
+                  "if (data.success) console.log('Silinen log sayısı:', data.data.deleted_count);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"older_than_days\": 30\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/error-logs",
+            "description": "older_than_days günden eski logları siler. SUPER_ADMIN gerektirir."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📜 19. Admin — Yasal Belge Yönetimi",
+      "description": "Yasal belgelerin versiyonlanmış yönetimi.",
+      "item": [
+        {
+          "name": "GET Tüm Versiyonlar (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Belgeler geldi', () => pm.response.to.have.status(200));",
+                  "if (data.success && data.data.length > 0) {",
+                  "    pm.environment.set('legal_doc_id', data.data[0].id);",
+                  "    data.data.forEach(d => console.log(d.type, 'v' + d.version, '| Aktif:', d.is_active));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/legal",
+            "description": "Tüm tip ve versiyonlar (HTML içerik dahil). İlk belge ID'si kaydedilir."
+          }
+        },
+        {
+          "name": "POST Yeni Belge Versiyonu Yayınla",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PRIVACY_POLICY\",\n  \"title\": \"Gizlilik Politikası\",\n  \"version\": \"2.0\",\n  \"content\": \"<h1>Güncellenmiş Gizlilik Politikası</h1><p>...</p>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/legal",
+            "description": "Aynı tipin önceki aktif versiyonu otomatik pasife alınır.\ntype: KVKK | PRIVACY_POLICY | TERMS_OF_USE | COOKIE_POLICY | DISTANCE_SALES"
+          }
+        },
+        {
+          "name": "GET Belge Detayı",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/admin/legal/{{legal_doc_id}}"
+          }
+        },
+        {
+          "name": "PATCH Belge Aktif/Pasif",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/admin/legal/{{legal_doc_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "⚡ 20. Webhooks & Cron Job'lar",
+      "description": "Vercel Cron Job'ları manuel tetikleme ve PayTR webhook simülasyonu.\n\n**CRON_SECRET** `.env.local`'dan alınır.",
+      "item": [
+        {
+          "name": "GET Cron — 24h Hatırlatma Gönder",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Cron çalıştı', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (data.success) console.log('Hatırlatmalar gönderildi. Zaman:', data.ran_at);",
+                  "if (!data.success) console.warn('Yetkisiz — CRON_SECRET kontrol edin');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer test-cron-secret-change-in-production",
+                "description": "CRON_SECRET env değişkeniyle eşleşmeli"
+              }
+            ],
+            "url": "{{base_url}}/api/cron/reminders",
+            "description": "23-25 saat içindeki CONFIRMED randevulara hatırlatma gönderir.\nVercel'de her gün 07:00 UTC'de otomatik çalışır."
+          }
+        },
+        {
+          "name": "GET Cron — Abonelik Kontrolü",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.test('Abonelik cron çalıştı', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 401]);",
+                  "});",
+                  "if (data.success) console.log('Abonelikler kontrol edildi:', data.ran_at);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer test-cron-secret-change-in-production"
+              }
+            ],
+            "url": "{{base_url}}/api/cron/subscriptions",
+            "description": "Süresi dolmuş abonelikleri EXPIRED yapar.\nVercel'de her gün 05:00 UTC'de otomatik çalışır."
+          }
+        },
+        {
+          "name": "POST PayTR Webhook Simülasyonu",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('PayTR webhook yanıtı', () => {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});",
+                  "console.log('Yanıt:', pm.response.text());"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "merchant_oid",
+                  "value": "TEST123456"
+                },
+                {
+                  "key": "status",
+                  "value": "success"
+                },
+                {
+                  "key": "total_amount",
+                  "value": "29999"
+                },
+                {
+                  "key": "hash",
+                  "value": "TEST_HASH_REPLACE_WITH_REAL"
+                }
+              ]
+            },
+            "url": "{{base_url}}/api/webhooks/paytr",
+            "description": "⚠️ Gerçek test için PayTR'nin test araçlarını kullanın.\nHash HMAC-SHA256 ile üretilmeli — bu simülasyon hash doğrulamasını geçmez."
+          }
+        }
+      ]
+    }
+  ]
+}
