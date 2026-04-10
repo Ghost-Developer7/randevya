@@ -203,6 +203,74 @@ async function main() {
 
   console.log("✅ Personel ve hizmetler oluşturuldu")
 
+  // ── Fake Randevular ─────────────────────────────────────────────────────────
+  const now = new Date()
+  const fakeCustomers = [
+    { name: "Elif Demir", phone: "05321112233", email: "elif@mail.com" },
+    { name: "Mehmet Kaya", phone: "05332223344", email: "mehmet@mail.com" },
+    { name: "Ayşe Yılmaz", phone: "05343334455", email: "ayse.y@mail.com" },
+    { name: "Ali Öztürk", phone: "05354445566", email: "ali@mail.com" },
+    { name: "Fatma Şen", phone: "05365556677", email: "fatma@mail.com" },
+    { name: "Hasan Çelik", phone: "05376667788", email: "hasan@mail.com" },
+    { name: "Zehra Arslan", phone: "05387778899", email: "zehra@mail.com" },
+    { name: "Burak Koç", phone: "05398889900", email: "burak@mail.com" },
+    { name: "Selin Aktaş", phone: "05401112233", email: "selin@mail.com" },
+    { name: "Emre Yıldız", phone: "05412223344", email: "emre@mail.com" },
+    { name: "Deniz Aydın", phone: "05423334455", email: "deniz@mail.com" },
+    { name: "Gül Özkan", phone: "05434445566", email: "gul@mail.com" },
+    { name: "Okan Tekin", phone: "05445556677", email: "okan@mail.com" },
+    { name: "Neslihan Kurt", phone: "05456667788", email: "neslihan@mail.com" },
+    { name: "Serkan Aksoy", phone: "05467778899", email: "serkan@mail.com" },
+  ]
+
+  const statuses = ["CONFIRMED", "COMPLETED", "PENDING", "CANCELLED", "NO_SHOW"] as const
+  const staffList = [staffAyse, staffMehmet]
+  const serviceList = [serviceKesim, serviceBoya]
+
+  // Son 30 günde dağılmış randevular
+  for (let i = 0; i < 50; i++) {
+    const customer = fakeCustomers[i % fakeCustomers.length]
+    const staff = staffList[i % staffList.length]
+    const service = serviceList[i % serviceList.length]
+    const daysAgo = Math.floor(Math.random() * 30)
+    const hour = 9 + Math.floor(Math.random() * 9) // 09:00 - 17:00
+    const startDate = new Date(now)
+    startDate.setDate(startDate.getDate() - daysAgo + Math.floor(Math.random() * 7))
+    startDate.setHours(hour, 0, 0, 0)
+    const endDate = new Date(startDate)
+    endDate.setMinutes(endDate.getMinutes() + service.duration_min)
+
+    // Geçmiş randevular COMPLETED, bugün CONFIRMED/PENDING, gelecek PENDING
+    let status: typeof statuses[number]
+    if (startDate < now) {
+      const r = Math.random()
+      status = r < 0.6 ? "COMPLETED" : r < 0.8 ? "CONFIRMED" : r < 0.9 ? "NO_SHOW" : "CANCELLED"
+    } else {
+      status = Math.random() < 0.4 ? "PENDING" : "CONFIRMED"
+    }
+
+    try {
+      await prisma.appointment.create({
+        data: {
+          tenant_id: tenantKuafor.id,
+          service_id: service.id,
+          staff_id: staff.id,
+          customer_name: customer.name,
+          customer_phone: customer.phone,
+          customer_email: customer.email,
+          start_time: startDate,
+          end_time: endDate,
+          status,
+          notes: i % 5 === 0 ? "Kısa kesim istiyorum" : i % 7 === 0 ? "Alerjim var, doğal ürün kullanın" : null,
+        },
+      })
+    } catch {
+      // Çakışan slot varsa atla
+    }
+  }
+
+  console.log("✅ 50 fake randevu oluşturuldu")
+
   // ── Platform SUPER_ADMIN ────────────────────────────────────────────────────
   const adminHash = await bcrypt.hash("Mehmet+123", 10)
 
