@@ -4,6 +4,7 @@ import { useState } from "react"
 import Card from "@/components/ui/Card"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
+import Modal from "@/components/ui/Modal"
 
 // ─── TABS ───────────────────────────────────────────────────────────────────
 
@@ -375,80 +376,453 @@ export default function SettingsPage() {
 
           {/* ── Abonelik ── */}
           {tab === "abonelik" && (
-            <div className="space-y-6">
-              <Card>
-                <h2 className="text-lg font-bold text-zinc-900 mb-1">Mevcut Plan</h2>
-                <p className="text-xs text-zinc-400 mb-4">Abonelik durumunuz ve plan detayları</p>
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#2a5cff] to-[#6366f1] text-white">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-blue-100">Mevcut Plan</p>
-                    <p className="text-2xl font-bold mt-1">Giriş</p>
-                    <p className="text-sm text-blue-200 mt-1">299 ₺/ay &middot; Yenileme: 10 Mayıs 2026</p>
-                  </div>
-                  <Button variant="outline" size="sm" className="border-white/30 text-white hover:bg-white/10">
-                    Planı Yükselt
-                  </Button>
-                </div>
-              </Card>
-
-              <Card>
-                <h2 className="text-sm font-bold text-zinc-900 mb-3">Plan Karşılaştırma</h2>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-zinc-100">
-                        <th className="text-left py-2 pr-4 font-medium text-zinc-500">Özellik</th>
-                        <th className="text-center py-2 px-3 font-semibold text-zinc-900">Giriş</th>
-                        <th className="text-center py-2 px-3 font-semibold text-[#2a5cff]">Profesyonel</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-xs">
-                      {[
-                        { feature: "Personel", giris: "5", pro: "Sınırsız" },
-                        { feature: "Hizmet", giris: "Sınırsız", pro: "Sınırsız" },
-                        { feature: "E-posta Bildirim", giris: "✓", pro: "✓" },
-                        { feature: "WhatsApp Bildirim", giris: "✗", pro: "✓" },
-                        { feature: "Özel Alan Adı", giris: "✗", pro: "✓" },
-                        { feature: "Gelişmiş Analitik", giris: "Basit", pro: "Tam" },
-                        { feature: "WhatsApp Destek", giris: "✗", pro: "✓" },
-                        { feature: "7/24 Destek", giris: "E-posta", pro: "Öncelikli" },
-                      ].map((row) => (
-                        <tr key={row.feature} className="border-b border-zinc-50">
-                          <td className="py-2 pr-4 text-zinc-600">{row.feature}</td>
-                          <td className="py-2 px-3 text-center text-zinc-700">{row.giris}</td>
-                          <td className="py-2 px-3 text-center font-medium text-[#2a5cff]">{row.pro}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
-
-              <Card>
-                <h2 className="text-sm font-bold text-zinc-900 mb-3">Ödeme Geçmişi</h2>
-                <div className="space-y-2">
-                  {[
-                    { date: "10 Nis 2026", amount: "299 ₺", status: "Ödendi", plan: "Giriş" },
-                    { date: "10 Mar 2026", amount: "299 ₺", status: "Ödendi", plan: "Giriş" },
-                    { date: "10 Şub 2026", amount: "299 ₺", status: "Ödendi", plan: "Giriş" },
-                  ].map((p, i) => (
-                    <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-zinc-50 text-sm">
-                      <div>
-                        <span className="text-zinc-900 font-medium">{p.date}</span>
-                        <span className="text-zinc-400 ml-2">{p.plan}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-zinc-900">{p.amount}</span>
-                        <span className="text-xs text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{p.status}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
+            <SubscriptionTab />
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── SUBSCRIPTION TAB ───────────────────────────────────────────────────────
+
+function SubscriptionTab() {
+  const [billing, setBilling] = useState<"monthly" | "yearly">("monthly")
+  const [currentPlan, setCurrentPlan] = useState("giris")
+  const [confirmPlan, setConfirmPlan] = useState<string | null>(null)
+  const [paymentStep, setPaymentStep] = useState<"confirm" | "payment" | "processing" | "success" | null>(null)
+  const [cardNumber, setCardNumber] = useState("")
+  const [cardName, setCardName] = useState("")
+  const [cardExpiry, setCardExpiry] = useState("")
+  const [cardCvv, setCardCvv] = useState("")
+
+  const tick = (
+    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  )
+  const cross = (
+    <svg className="w-4 h-4 text-zinc-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  )
+
+  const plans = [
+    {
+      id: "deneme",
+      name: "Deneme",
+      desc: "Giriş paketini 14 gün ücretsiz deneyin",
+      monthly: 0,
+      yearly: 0,
+      isFree: true,
+      features: [
+        { text: "Giriş paketi özellikleri", has: true },
+        { text: "14 gün süre limiti", has: true },
+      ],
+    },
+    {
+      id: "giris",
+      name: "Giriş",
+      desc: "Küçük işletmeler için temel paket",
+      monthly: 299,
+      yearly: 239,
+      isFree: false,
+      features: [
+        { text: "5 personel", has: true },
+        { text: "Sınırsız hizmet", has: true },
+        { text: "E-posta bildirimi", has: true },
+        { text: "E-posta destek", has: true },
+        { text: "7/24 destek", has: true },
+        { text: "Basit analitik rapor", has: true },
+        { text: "WhatsApp bildirim", has: false },
+        { text: "Özel alan adı", has: false },
+      ],
+    },
+    {
+      id: "profesyonel",
+      name: "Profesyonel",
+      desc: "Büyüyen işletmeler için gelişmiş özellikler",
+      monthly: 599,
+      yearly: 479,
+      isFree: false,
+      highlighted: true,
+      features: [
+        { text: "Sınırsız personel", has: true },
+        { text: "Sınırsız hizmet", has: true },
+        { text: "WhatsApp bildirim", has: true },
+        { text: "Özel alan adı", has: true },
+        { text: "7/24 öncelikli destek", has: true },
+        { text: "WhatsApp destek", has: true },
+        { text: "Tam analitik & rapor", has: true },
+        { text: "Webhook & API", has: true },
+      ],
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Current plan banner */}
+      <Card padding="sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-[#2a5cff] to-[#6366f1] text-white">
+          <div>
+            <p className="text-xs text-blue-200 font-medium">Mevcut Planınız</p>
+            <p className="text-xl font-bold mt-0.5">Giriş — 299 ₺/ay</p>
+            <p className="text-xs text-blue-200 mt-1">Sonraki yenileme: 10 Mayıs 2026</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">Aktif</span>
+          </div>
+        </div>
+      </Card>
+
+      {/* Billing toggle */}
+      <div className="flex items-center justify-center gap-3">
+        <span className={`text-sm font-medium ${billing === "monthly" ? "text-zinc-900" : "text-zinc-400"}`}>Aylık</span>
+        <button
+          onClick={() => setBilling(billing === "monthly" ? "yearly" : "monthly")}
+          className={`relative w-14 h-7 rounded-full transition-colors ${billing === "yearly" ? "bg-[#2a5cff]" : "bg-zinc-300"}`}
+        >
+          <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform ${billing === "yearly" ? "translate-x-7" : "translate-x-0.5"}`} />
+        </button>
+        <span className={`text-sm font-medium ${billing === "yearly" ? "text-zinc-900" : "text-zinc-400"}`}>
+          Yıllık
+          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded-full">%20</span>
+        </span>
+      </div>
+
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {plans.map((plan) => {
+          const isCurrent = plan.id === currentPlan
+          const price = billing === "yearly" ? plan.yearly : plan.monthly
+
+          return (
+            <div
+              key={plan.id}
+              className={`relative rounded-2xl border-2 p-5 transition-all ${
+                plan.highlighted
+                  ? "border-[#2a5cff] shadow-lg shadow-blue-500/10"
+                  : isCurrent
+                    ? "border-emerald-300 bg-emerald-50/30"
+                    : "border-zinc-200"
+              }`}
+            >
+              {plan.highlighted && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#2a5cff] text-white text-[10px] font-bold rounded-full uppercase">
+                  Önerilen
+                </div>
+              )}
+
+              <div className="mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-zinc-900">{plan.name}</h3>
+                  {isCurrent && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded-full">Mevcut</span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">{plan.desc}</p>
+              </div>
+
+              {/* Price */}
+              <div className="mb-5">
+                {plan.isFree ? (
+                  <div>
+                    <span className="text-3xl font-extrabold text-zinc-900">Ücretsiz</span>
+                    <p className="text-xs text-zinc-400 mt-0.5">14 gün</p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-extrabold text-zinc-900">{price} ₺</span>
+                      <span className="text-sm text-zinc-400">/ay</span>
+                    </div>
+                    {billing === "yearly" && (
+                      <p className="text-xs text-emerald-600 mt-0.5">
+                        <span className="line-through text-zinc-400 mr-1">{plan.monthly} ₺</span>
+                        Yıllık ödeme ile {plan.monthly - plan.yearly} ₺ tasarruf
+                      </p>
+                    )}
+                    {billing === "yearly" && (
+                      <p className="text-xs text-zinc-400 mt-0.5">Yıllık toplam: {price * 12} ₺</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Features */}
+              <div className="space-y-2.5 mb-5">
+                {plan.features.map((f) => (
+                  <div key={f.text} className="flex items-center gap-2">
+                    {f.has ? tick : cross}
+                    <span className={`text-xs ${f.has ? "text-zinc-700" : "text-zinc-400"}`}>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action */}
+              {isCurrent ? (
+                <div className="w-full py-2.5 text-center text-sm font-medium text-emerald-600 bg-emerald-50 rounded-xl">
+                  Mevcut Planınız
+                </div>
+              ) : plan.isFree ? (
+                <div className="w-full py-2.5 text-center text-sm font-medium text-zinc-400 bg-zinc-50 rounded-xl">
+                  Deneme süresi doldu
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmPlan(plan.id)}
+                  className={`w-full py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                    plan.highlighted
+                      ? "bg-[#2a5cff] text-white hover:opacity-90 shadow-md shadow-blue-500/20"
+                      : "bg-zinc-900 text-white hover:bg-zinc-800"
+                  }`}
+                >
+                  {plan.monthly > (plans.find((p) => p.id === currentPlan)?.monthly || 0) ? "Yükselt" : "Geçiş Yap"}
+                </button>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Payment History */}
+      <Card>
+        <h2 className="text-sm font-bold text-zinc-900 mb-4">Ödeme Geçmişi</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-zinc-100 text-xs text-zinc-400 uppercase tracking-wide">
+                <th className="text-left py-2 font-medium">Tarih</th>
+                <th className="text-left py-2 font-medium">Plan</th>
+                <th className="text-left py-2 font-medium">Dönem</th>
+                <th className="text-right py-2 font-medium">Tutar</th>
+                <th className="text-right py-2 font-medium">Durum</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { date: "10 Nis 2026", plan: "Giriş", period: "Aylık", amount: "299 ₺", status: "Ödendi" },
+                { date: "10 Mar 2026", plan: "Giriş", period: "Aylık", amount: "299 ₺", status: "Ödendi" },
+                { date: "10 Şub 2026", plan: "Giriş", period: "Aylık", amount: "299 ₺", status: "Ödendi" },
+                { date: "10 Oca 2026", plan: "Giriş", period: "Aylık", amount: "299 ₺", status: "Ödendi" },
+                { date: "27 Ara 2025", plan: "Deneme", period: "14 gün", amount: "0 ₺", status: "Ücretsiz" },
+              ].map((p, i) => (
+                <tr key={i} className="border-b border-zinc-50">
+                  <td className="py-2.5 text-zinc-900">{p.date}</td>
+                  <td className="py-2.5 text-zinc-600">{p.plan}</td>
+                  <td className="py-2.5 text-zinc-400">{p.period}</td>
+                  <td className="py-2.5 text-right font-semibold text-zinc-900">{p.amount}</td>
+                  <td className="py-2.5 text-right">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      p.status === "Ödendi" ? "bg-emerald-50 text-emerald-600" : "bg-zinc-100 text-zinc-500"
+                    }`}>
+                      {p.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Payment Modal */}
+      {confirmPlan && (() => {
+        const selectedPlan = plans.find((p) => p.id === confirmPlan)
+        if (!selectedPlan) return null
+        const price = billing === "yearly" ? selectedPlan.yearly : selectedPlan.monthly
+        const totalYearly = billing === "yearly" ? price * 12 : price
+
+        const closeModal = () => { setConfirmPlan(null); setPaymentStep(null); setCardNumber(""); setCardName(""); setCardExpiry(""); setCardCvv("") }
+
+        const startPayment = () => setPaymentStep("payment")
+
+        const processPayment = () => {
+          setPaymentStep("processing")
+          // TODO: Gerçek PayTR API entegrasyonu
+          // POST /api/panel/subscription/upgrade { plan_id, billing_period, card_token }
+          setTimeout(() => {
+            setPaymentStep("success")
+            setCurrentPlan(confirmPlan)
+          }, 2500)
+        }
+
+        const formatCardNumber = (val: string) => {
+          const nums = val.replace(/\D/g, "").slice(0, 16)
+          return nums.replace(/(\d{4})(?=\d)/g, "$1 ")
+        }
+
+        const formatExpiry = (val: string) => {
+          const nums = val.replace(/\D/g, "").slice(0, 4)
+          if (nums.length >= 3) return nums.slice(0, 2) + "/" + nums.slice(2)
+          return nums
+        }
+
+        return (
+          <Modal open={true} onClose={closeModal} title={
+            paymentStep === "success" ? "Ödeme Başarılı" :
+            paymentStep === "processing" ? "Ödeme İşleniyor" :
+            paymentStep === "payment" ? "Ödeme Bilgileri" :
+            "Plan Yükseltme"
+          }>
+            {/* Step 1: Confirm */}
+            {(!paymentStep || paymentStep === "confirm") && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-gradient-to-r from-[#2a5cff]/5 to-[#6366f1]/5 border border-[#2a5cff]/10">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-bold text-zinc-900">{selectedPlan.name}</h3>
+                    <span className="text-lg font-extrabold text-[#2a5cff]">{price} ₺<span className="text-xs text-zinc-400 font-normal">/ay</span></span>
+                  </div>
+                  <div className="text-xs text-zinc-500 space-y-0.5">
+                    <p>Ödeme tipi: <strong className="text-zinc-700">{billing === "yearly" ? "Yıllık" : "Aylık"}</strong></p>
+                    {billing === "yearly" && <p>Yıllık toplam: <strong className="text-zinc-700">{totalYearly} ₺</strong></p>}
+                    {billing === "yearly" && <p className="text-emerald-600">%20 indirim uygulanmış fiyat</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {selectedPlan.features.filter((f) => f.has).slice(0, 5).map((f) => (
+                    <div key={f.text} className="flex items-center gap-2 text-xs text-zinc-600">
+                      {tick}
+                      {f.text}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <Button variant="outline" fullWidth onClick={closeModal}>Vazgeç</Button>
+                  <Button fullWidth onClick={startPayment}>Ödemeye Geç</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: PayTR Payment Form */}
+            {paymentStep === "payment" && (
+              <div className="space-y-4">
+                {/* PayTR badge */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center">
+                      <span className="text-white text-[10px] font-bold">Pay</span>
+                    </div>
+                    <span className="text-xs text-zinc-400">PayTR Güvenli Ödeme</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span className="text-[10px] text-emerald-600 font-medium">256-bit SSL</span>
+                  </div>
+                </div>
+
+                {/* Order summary */}
+                <div className="p-3 rounded-xl bg-zinc-50 flex items-center justify-between">
+                  <div className="text-xs text-zinc-500">
+                    <p className="font-medium text-zinc-900">{selectedPlan.name} — {billing === "yearly" ? "Yıllık" : "Aylık"}</p>
+                  </div>
+                  <span className="text-base font-bold text-zinc-900">{billing === "yearly" ? totalYearly : price} ₺</span>
+                </div>
+
+                {/* Card form */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1">Kart Numarası</label>
+                    <input
+                      type="text"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                      placeholder="0000 0000 0000 0000"
+                      maxLength={19}
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff] font-mono tracking-wider"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-600 mb-1">Kart Üzerindeki İsim</label>
+                    <input
+                      type="text"
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value.toUpperCase())}
+                      placeholder="AD SOYAD"
+                      className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff] uppercase"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 mb-1">Son Kullanma</label>
+                      <input
+                        type="text"
+                        value={cardExpiry}
+                        onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
+                        placeholder="AA/YY"
+                        maxLength={5}
+                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff] font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-600 mb-1">CVV</label>
+                      <input
+                        type="password"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder="•••"
+                        maxLength={4}
+                        className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff] font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-zinc-400 text-center">
+                  Ödemeniz PayTR altyapısı ile güvenli şekilde işlenir. Kart bilgileriniz sunucularımızda saklanmaz.
+                </p>
+
+                <div className="flex gap-2 pt-1">
+                  <Button variant="outline" fullWidth onClick={() => setPaymentStep(null)}>Geri</Button>
+                  <Button
+                    fullWidth
+                    onClick={processPayment}
+                    disabled={cardNumber.replace(/\s/g, "").length < 16 || !cardName || cardExpiry.length < 5 || cardCvv.length < 3}
+                  >
+                    {billing === "yearly" ? totalYearly : price} ₺ Öde
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Processing */}
+            {paymentStep === "processing" && (
+              <div className="text-center py-8">
+                <div className="w-14 h-14 rounded-full border-4 border-zinc-200 border-t-[#2a5cff] animate-spin mx-auto" />
+                <p className="mt-4 text-sm font-medium text-zinc-900">Ödemeniz işleniyor...</p>
+                <p className="text-xs text-zinc-400 mt-1">Lütfen sayfayı kapatmayın</p>
+              </div>
+            )}
+
+            {/* Step 4: Success */}
+            {paymentStep === "success" && (
+              <div className="text-center py-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-zinc-900 mt-4">Ödeme Başarılı!</h3>
+                <p className="text-sm text-zinc-500 mt-1">
+                  <strong>{selectedPlan.name}</strong> planına geçiş yapıldı.
+                </p>
+                <div className="mt-4 p-3 rounded-xl bg-zinc-50 text-xs text-zinc-500 space-y-1">
+                  <p>Plan: <strong className="text-zinc-900">{selectedPlan.name}</strong></p>
+                  <p>Ödeme: <strong className="text-zinc-900">{billing === "yearly" ? totalYearly : price} ₺ ({billing === "yearly" ? "Yıllık" : "Aylık"})</strong></p>
+                  <p>Sonraki yenileme: <strong className="text-zinc-900">{billing === "yearly" ? "10 Nisan 2027" : "10 Mayıs 2026"}</strong></p>
+                </div>
+                <div className="mt-4">
+                  <Button fullWidth onClick={closeModal}>Tamam</Button>
+                </div>
+              </div>
+            )}
+          </Modal>
+        )
+      })()}
     </div>
   )
 }

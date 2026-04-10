@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Logo from "@/components/ui/Logo"
@@ -20,6 +21,16 @@ const navItems = [
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Bildirimler",
+    href: "/panel/bildirimler",
+    hasBadge: true,
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
     ),
   },
@@ -55,6 +66,17 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const [unreadCount, setUnreadCount] = useState(3)
+
+  useEffect(() => {
+    const sync = () => {
+      const val = localStorage.getItem("randevya_unread")
+      setUnreadCount(val ? parseInt(val) : 0)
+    }
+    sync()
+    window.addEventListener("storage", sync)
+    return () => window.removeEventListener("storage", sync)
+  }, [])
 
   return (
     <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col h-full">
@@ -82,7 +104,12 @@ export default function Sidebar() {
               `}
             >
               {item.icon}
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {"hasBadge" in item && item.hasBadge && unreadCount > 0 ? (
+                <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount}
+                </span>
+              ) : null}
             </Link>
           )
         })}
