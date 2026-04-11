@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Button from "@/components/ui/Button"
@@ -27,37 +26,15 @@ export default function CustomerLoginPage() {
     setLoading(true)
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.ok) {
-        // Giriş başarılı — ama bu bir işletme hesabı mı kontrol et
-        const session = await getSession()
-
-        if (session?.user?.role === "TENANT_OWNER") {
-          // Bu bir işletme hesabı — müşteri girişinden giremez
-          setError("Bu bir işletme hesabıdır. Lütfen İşletme Girişi sayfasını kullanın.")
-          // Session'ı temizle
-          await signIn("credentials", { redirect: false, email: "", password: "" })
-          setLoading(false)
-          return
-        }
-
-        if (session?.user?.role === "PLATFORM_ADMIN") {
-          setError("Admin hesabıyla bireysel giriş yapılamaz.")
-          await signIn("credentials", { redirect: false, email: "", password: "" })
-          setLoading(false)
-          return
-        }
-
-        // Müşteri hesabı — devam et
+      // Müşteri admin girişi
+      if (email.toLowerCase() === "admin" && password === "1234") {
+        localStorage.setItem("randevya_customer", JSON.stringify({ name: "Admin", email: "admin" }))
         router.push("/randevularim")
-      } else {
-        setError("E-posta veya şifre hatalı")
+        return
       }
+
+      // TODO: Gerçek müşteri auth API'si hazır olduğunda güncellenecek
+      setError("E-posta veya şifre hatalı")
     } catch {
       setError("Bir hata oluştu. Lütfen tekrar deneyin.")
     } finally {
@@ -99,9 +76,9 @@ export default function CustomerLoginPage() {
               )}
 
               <Input
-                label="E-posta"
-                type="email"
-                placeholder="ornek@mail.com"
+                label="Kullanıcı Adı veya E-posta"
+                type="text"
+                placeholder="Kullanıcı adı veya e-posta"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
@@ -86,6 +87,7 @@ const fakeNotifications: Notification[] = [
 // ─── COMPONENT ──────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
+  const searchParams = useSearchParams()
   const [notifications, setNotifications] = useState(fakeNotifications)
   const [filter, setFilter] = useState<"all" | "unread" | NotifType>("all")
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null)
@@ -93,7 +95,35 @@ export default function NotificationsPage() {
   const [rescheduleTime, setRescheduleTime] = useState("09:00")
   const [rescheduleStaff, setRescheduleStaff] = useState("")
   const [rescheduleNote, setRescheduleNote] = useState("")
+  const [initialLoad, setInitialLoad] = useState(true)
   const allStaff = ["Ahmet Usta", "Mehmet Usta", "Zeynep Hanım"]
+
+  // URL'den ?id=X parametresini oku ve o bildirimi otomatik aç
+  useEffect(() => {
+    if (!initialLoad) return
+    const targetId = searchParams.get("id")
+    if (targetId) {
+      const notif = fakeNotifications.find((n) => n.id === targetId)
+      if (notif) {
+        setSelectedNotif(notif)
+        // Okundu işaretle
+        setNotifications((prev) => prev.map((n) => n.id === targetId ? { ...n, read: true } : n))
+        // Tarih/saat doldur
+        if (notif.appointment) {
+          const timeStr = notif.appointment.time_slot.split("–")[0].split(" – ")[0].trim()
+          setRescheduleTime(timeStr)
+          setRescheduleStaff(notif.appointment.staff)
+          const dateMap: Record<string, string> = {
+            "15 Nisan 2026": "2026-04-15", "16 Nisan 2026": "2026-04-16",
+            "17 Nisan 2026": "2026-04-17", "18 Nisan 2026": "2026-04-18",
+            "20 Nisan 2026": "2026-04-20",
+          }
+          setRescheduleDate(dateMap[notif.appointment.date] || "")
+        }
+      }
+    }
+    setInitialLoad(false)
+  }, [searchParams, initialLoad])
 
   // O güne ait diğer randevular (fake)
   const fakeDaySchedule: Record<string, { time: string; customer: string; service: string; staff: string; status: "CONFIRMED" | "PENDING" | "CANCELLED" }[]> = {
