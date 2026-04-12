@@ -85,7 +85,7 @@ async function getHandler(
     company_name: tenant.company_name,
     is_active: tenant.is_active,
     registration_date: tenant.created_at.toISOString(),
-    total_appointments,
+    total_appointments: totalAppointments,
     appointments_this_month: appointmentsThisMonth,
     appointments_last_month: appointmentsLastMonth,
     active_staff_count: activeStaffCount,

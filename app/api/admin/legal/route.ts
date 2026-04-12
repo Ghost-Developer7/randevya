@@ -11,7 +11,6 @@ async function getHandler() {
 
   const docs = await db.legalDocument.findMany({
     orderBy: [{ type: "asc" }, { created_at: "desc" }],
-    include: { _count: { select: { consents: true } } },
     select: {
       id: true,
       type: true,
@@ -19,7 +18,7 @@ async function getHandler() {
       version: true,
       is_active: true,
       created_at: true,
-      _count: true,
+      _count: { select: { consents: true } },
     },
   })
 

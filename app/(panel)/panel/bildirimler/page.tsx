@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Card from "@/components/ui/Card"
 import Badge from "@/components/ui/Badge"
@@ -86,7 +86,15 @@ const fakeNotifications: Notification[] = [
 
 // ─── COMPONENT ──────────────────────────────────────────────────────────────
 
-export default function NotificationsPage() {
+export default function NotificationsPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-neutral-400">Yükleniyor...</div>}>
+      <NotificationsPage />
+    </Suspense>
+  )
+}
+
+function NotificationsPage() {
   const searchParams = useSearchParams()
   const [notifications, setNotifications] = useState(fakeNotifications)
   const [filter, setFilter] = useState<"all" | "unread" | NotifType>("all")

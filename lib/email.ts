@@ -1,7 +1,11 @@
 import { Resend } from "resend"
 import { db } from "@/lib/db"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let _resend: Resend | null = null
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY)
+  return _resend
+}
 const FROM_EMAIL = "bildirim@randevya.com"
 
 // ─── Email şablonları (sade HTML) ────────────────────────────────────────────
@@ -223,7 +227,7 @@ export async function sendAppointmentConfirm(params: {
   })
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `${params.companyName} <${FROM_EMAIL}>`,
       to: params.customerEmail,
       subject: `Randevunuz onaylandı — ${date} ${time}`,
@@ -263,7 +267,7 @@ export async function sendAppointmentCancel(params: {
   })
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `${params.companyName} <${FROM_EMAIL}>`,
       to: params.customerEmail,
       subject: `Randevunuz iptal edildi`,
@@ -301,7 +305,7 @@ export async function sendAppointmentReminder(params: {
   })
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `${params.companyName} <${FROM_EMAIL}>`,
       to: params.customerEmail,
       subject: `Hatırlatma: Yarın ${time} randevunuz var`,
@@ -341,7 +345,7 @@ export async function sendWaitlistNotify(params: {
   })
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `${params.companyName} <${FROM_EMAIL}>`,
       to: params.customerEmail,
       subject: `Bekleme listesi — Slot açıldı! (${params.expireMinutes ?? 30}dk içinde onayla)`,
@@ -377,7 +381,7 @@ export async function sendSupportTicketOpened(params: {
 }): Promise<void> {
   if (!params.adminEmails.length) return
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `Randevya Destek <${FROM_EMAIL}>`,
       to: params.adminEmails,
       subject: `[Destek #${params.ticketId.slice(0, 8)}] ${params.subject}`,
@@ -411,7 +415,7 @@ export async function sendSupportTicketReply(params: {
   viewUrl: string
 }): Promise<void> {
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `Randevya Destek <${FROM_EMAIL}>`,
       to: params.toEmail,
       subject: `RE: ${params.ticketSubject}`,
@@ -449,7 +453,7 @@ export async function sendBusinessNewAppointment(params: {
   })
 
   try {
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `Randevya <${FROM_EMAIL}>`,
       to: params.businessEmail,
       subject: `Yeni randevu: ${params.customerName} — ${date} ${time}`,

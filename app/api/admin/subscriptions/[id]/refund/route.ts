@@ -21,7 +21,7 @@ async function postHandler(req: NextRequest, { params }: { params: Promise<{ id:
   if (subscription.status === "REFUNDED") return err("Bu abonelik zaten iade edildi", 409)
 
   // Varsayılan iade tutarı: plan aylık ücreti (kuruş)
-  const amount = body?.amount ?? Math.round((subscription.plan.price_monthly ?? 0) * 100)
+  const amount = body?.amount ?? Math.round(Number(subscription.plan.price_monthly ?? 0) * 100)
   if (!amount || amount <= 0) return err("Geçersiz iade tutarı")
 
   const result = await refundPayment({
