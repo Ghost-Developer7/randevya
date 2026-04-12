@@ -36,7 +36,7 @@ async function getTenantPlan(tenantId: string) {
       owner_email: true,
       company_name: true,
       logo_url: true,
-      plan: { select: { whatsapp_enabled: true } },
+      plan: { select: { whatsapp_enabled: true, custom_domain: true } },
     },
   })
 }
@@ -67,9 +67,11 @@ export async function notifyAppointmentCreated(appointmentId: string): Promise<v
     startTime: appointment.start_time,
   }
 
+  const isWhiteLabel = tenant.plan.custom_domain
+
   // Email + İşletme email + (plan izin veriyorsa) WhatsApp — paralel gönder
   const tasks: Promise<unknown>[] = [
-    sendAppointmentConfirm({ ...base, logoUrl: tenant.logo_url }),
+    sendAppointmentConfirm({ ...base, logoUrl: tenant.logo_url, isWhiteLabel }),
     sendBusinessNewAppointment({
       ...base,
       businessEmail: tenant.owner_email,
@@ -203,8 +205,9 @@ export async function notifyWaitlistSlotOpened(
     sendWaitlistNotify({ ...base, companyName: entry.appointment.tenant.company_name }),
   ]
 
+  const companyName = entry.appointment.tenant.company_name
   if (entry.appointment.tenant.plan.whatsapp_enabled) tasks.push(sendWaWaitlistNotify(base))
-  if (SMS_ENABLED) tasks.push(sendWaitlistNotifySms(base))
+  if (SMS_ENABLED) tasks.push(sendWaitlistNotifySms({ ...base, companyName }))
 
   await Promise.allSettled(tasks)
 }

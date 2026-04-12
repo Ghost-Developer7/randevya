@@ -1,11 +1,23 @@
-import { headers } from "next/headers"
 import Link from "next/link"
 
-async function getTenantData() {
-  const headersList = await headers()
-  const tenantId = headersList.get("x-tenant-id")
-  if (!tenantId) return null
+type TenantData = {
+  company_name: string
+  logo_url: string | null
+  theme_config: {
+    primary_color?: string
+    secondary_color?: string
+    font?: string
+    border_radius?: string
+    tagline?: string
+    cover_image_url?: string
+  }
+  is_white_label?: boolean
+}
 
+type Service = { id: string; name: string; description?: string; duration_min: number }
+type Staff = { id: string; full_name: string; title?: string; photo_url?: string }
+
+async function fetchTenantData(tenantId: string) {
   const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3003"
   const hdrs = { "x-tenant-id": tenantId }
 
@@ -22,34 +34,83 @@ async function getTenantData() {
   ])
 
   return {
-    tenant: tenant?.data,
-    services: services?.data || [],
-    staff: staff?.data || [],
-    isWhiteLabel: tenant?.data?.is_white_label ?? false,
+    tenant: tenant?.data as TenantData | null,
+    services: (services?.data || []) as Service[],
+    staff: (staff?.data || []) as Staff[],
   }
 }
 
-export default async function TenantLandingPage() {
-  const data = await getTenantData()
+export default async function TenantHome({ tenantId }: { tenantId: string }) {
+  const data = await fetchTenantData(tenantId)
 
-  if (!data?.tenant) {
-    return null // layout handles the 404
+  if (!data.tenant) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-200 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <h1 className="text-xl font-semibold text-zinc-900">İşletme Bulunamadı</h1>
+          <p className="mt-2 text-sm text-zinc-500">Bu adreste kayıtlı bir işletme yok.</p>
+        </div>
+      </div>
+    )
   }
 
-  const { tenant, services, staff, isWhiteLabel } = data
+  const { tenant, services, staff } = data
   const theme = tenant.theme_config || {}
+  const isWhiteLabel = tenant.is_white_label ?? false
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div
+      className="min-h-screen bg-zinc-50"
+      style={
+        {
+          "--color-primary": theme.primary_color || "#2a5cff",
+          "--color-secondary": theme.secondary_color || "#ff4d2e",
+          "--font-main": theme.font || "Inter, sans-serif",
+          "--border-radius": theme.border_radius || "12px",
+        } as React.CSSProperties
+      }
+    >
+      {/* Header */}
+      <header className="bg-white border-b border-zinc-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {tenant.logo_url ? (
+              <img
+                src={tenant.logo_url}
+                alt={tenant.company_name}
+                className="w-10 h-10 rounded-xl object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center">
+                <span className="text-white font-bold text-lg">
+                  {tenant.company_name?.charAt(0) || "R"}
+                </span>
+              </div>
+            )}
+            <div>
+              <h1 className="text-lg font-bold text-zinc-900">{tenant.company_name}</h1>
+              {theme.tagline && <p className="text-xs text-zinc-500">{theme.tagline}</p>}
+            </div>
+          </div>
+          <Link
+            href="/randevu"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity"
+          >
+            Randevu Al
+          </Link>
+        </div>
+      </header>
+
       {/* Hero */}
       <section className="relative bg-gradient-to-b from-white to-zinc-50 py-16 sm:py-24">
         {theme.cover_image_url && (
           <div className="absolute inset-0 overflow-hidden">
-            <img
-              src={theme.cover_image_url}
-              alt=""
-              className="w-full h-full object-cover opacity-10"
-            />
+            <img src={theme.cover_image_url} alt="" className="w-full h-full object-cover opacity-10" />
           </div>
         )}
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
@@ -75,22 +136,16 @@ export default async function TenantLandingPage() {
       {services.length > 0 && (
         <section className="py-16">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h3 className="text-2xl font-bold text-zinc-900 mb-8">
-              Hizmetlerimiz
-            </h3>
+            <h3 className="text-2xl font-bold text-zinc-900 mb-8">Hizmetlerimiz</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {services.map((service: { id: string; name: string; description?: string; duration_min: number }) => (
+              {services.map((service) => (
                 <div
                   key={service.id}
                   className="p-5 rounded-2xl bg-white border border-zinc-200 hover:shadow-md transition-shadow"
                 >
-                  <h4 className="text-base font-semibold text-zinc-900">
-                    {service.name}
-                  </h4>
+                  <h4 className="text-base font-semibold text-zinc-900">{service.name}</h4>
                   {service.description && (
-                    <p className="mt-1 text-sm text-zinc-500 line-clamp-2">
-                      {service.description}
-                    </p>
+                    <p className="mt-1 text-sm text-zinc-500 line-clamp-2">{service.description}</p>
                   )}
                   <div className="mt-3 flex items-center gap-1 text-xs text-zinc-400">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,11 +164,9 @@ export default async function TenantLandingPage() {
       {staff.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h3 className="text-2xl font-bold text-zinc-900 mb-8">
-              Ekibimiz
-            </h3>
+            <h3 className="text-2xl font-bold text-zinc-900 mb-8">Ekibimiz</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {staff.map((member: { id: string; full_name: string; title?: string; photo_url?: string }) => (
+              {staff.map((member) => (
                 <div key={member.id} className="text-center">
                   {member.photo_url ? (
                     <img
@@ -123,17 +176,11 @@ export default async function TenantLandingPage() {
                     />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-zinc-200 flex items-center justify-center mx-auto">
-                      <span className="text-xl font-bold text-zinc-400">
-                        {member.full_name.charAt(0)}
-                      </span>
+                      <span className="text-xl font-bold text-zinc-400">{member.full_name.charAt(0)}</span>
                     </div>
                   )}
-                  <p className="mt-3 text-sm font-medium text-zinc-900">
-                    {member.full_name}
-                  </p>
-                  {member.title && (
-                    <p className="text-xs text-zinc-500">{member.title}</p>
-                  )}
+                  <p className="mt-3 text-sm font-medium text-zinc-900">{member.full_name}</p>
+                  {member.title && <p className="text-xs text-zinc-500">{member.title}</p>}
                 </div>
               ))}
             </div>

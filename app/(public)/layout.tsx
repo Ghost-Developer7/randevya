@@ -1,6 +1,21 @@
 import { headers } from "next/headers"
+import type { Metadata } from "next"
 
-async function getTenantConfig() {
+type TenantConfig = {
+  id: string
+  company_name: string
+  logo_url: string | null
+  theme_config: {
+    primary_color?: string
+    secondary_color?: string
+    font?: string
+    border_radius?: string
+    tagline?: string
+  }
+  is_white_label?: boolean
+}
+
+async function getTenantConfig(): Promise<TenantConfig | null> {
   const headersList = await headers()
   const tenantId = headersList.get("x-tenant-id")
   if (!tenantId) return null
@@ -18,6 +33,34 @@ async function getTenantConfig() {
     return data.data
   } catch {
     return null
+  }
+}
+
+// ─── Dinamik SEO metadata ────────────────────────────────────────────────────
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await getTenantConfig()
+  if (!tenant) return {}
+
+  return {
+    title: {
+      default: `${tenant.company_name} - Online Randevu`,
+      template: `%s | ${tenant.company_name}`,
+    },
+    description: `${tenant.company_name} online randevu sistemi. Hizmetlerimizi inceleyin ve hemen randevu alın.`,
+    openGraph: {
+      title: `${tenant.company_name} - Online Randevu`,
+      description: `${tenant.company_name} online randevu sistemi.`,
+      siteName: tenant.company_name,
+      ...(tenant.logo_url ? { images: [tenant.logo_url] } : {}),
+    },
+    ...(tenant.logo_url
+      ? {
+          icons: {
+            icon: tenant.logo_url,
+            apple: tenant.logo_url,
+          },
+        }
+      : {}),
   }
 }
 

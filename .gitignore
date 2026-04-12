@@ -30,8 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env.example
+# env files — secret'lar ASLA commit edilmemeli
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
 
 # vercel
 .vercel

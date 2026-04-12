@@ -23,7 +23,8 @@
       "Bash(npm run:*)",
       "Bash(node -e \":*)",
       "Bash(xargs grep:*)",
-      "Bash(taskkill /PID 46404 /F)"
+      "Bash(taskkill /PID 46404 /F)",
+      "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api -type f -name \"route.ts\" -path \"*/panel/*\" -exec grep -l \"findUnique\\\\|findFirst\" {} \\\\;)"
     ]
   }
 }

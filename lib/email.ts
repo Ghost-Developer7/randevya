@@ -14,6 +14,7 @@ function appointmentConfirmHtml(data: {
   date: string
   time: string
   logo_url?: string
+  isWhiteLabel?: boolean
 }) {
   return `
 <!DOCTYPE html>
@@ -49,7 +50,7 @@ function appointmentConfirmHtml(data: {
       <p style="color:#777;font-size:13px;margin:0;">İptal etmek veya değiştirmek isterseniz lütfen bizimle iletişime geçin.</p>
     </div>
     <div style="background:#f5f3ef;padding:20px 40px;text-align:center;">
-      <p style="color:#aaa;font-size:12px;margin:0;">Bu email <strong>${data.company_name}</strong> tarafından Randevya aracılığıyla gönderilmiştir.</p>
+      <p style="color:#aaa;font-size:12px;margin:0;">Bu email <strong>${data.company_name}</strong> tarafından${data.isWhiteLabel ? "" : " Randevya aracılığıyla"} gönderilmiştir.</p>
     </div>
   </div>
 </body>
@@ -212,6 +213,7 @@ export async function sendAppointmentConfirm(params: {
   serviceName: string
   staffName: string
   startTime: Date
+  isWhiteLabel?: boolean
 }): Promise<EmailResult> {
   const date = params.startTime.toLocaleDateString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
@@ -233,6 +235,7 @@ export async function sendAppointmentConfirm(params: {
         staff_name: params.staffName,
         date,
         time,
+        isWhiteLabel: params.isWhiteLabel,
       }),
     })
     await logNotification(params.tenantId, params.customerEmail, "APPOINTMENT_CONFIRM", true)

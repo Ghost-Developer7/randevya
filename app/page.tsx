@@ -1,6 +1,52 @@
 import Link from "next/link"
+import { headers } from "next/headers"
+import type { Metadata } from "next"
 import Logo from "@/components/ui/Logo"
 import Navbar from "@/components/public/Navbar"
+import TenantHome from "@/components/public/TenantHome"
+
+// ─── Dinamik metadata: tenant varsa tenant adı, yoksa Randevya ──────────────
+export async function generateMetadata(): Promise<Metadata> {
+  const headersList = await headers()
+  const tenantId = headersList.get("x-tenant-id")
+
+  if (!tenantId) {
+    return {
+      title: "Randevya - Online Randevu Yönetim Platformu",
+      description:
+        "İşletmeniz için online randevu sistemi. Kolay yönetim, otomatik bildirimler, müşteri takibi.",
+      keywords: ["randevu", "online randevu", "randevu sistemi", "kuaför randevu", "klinik randevu"],
+    }
+  }
+
+  try {
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3003"
+    const res = await fetch(`${baseUrl}/api/tenant`, {
+      headers: { "x-tenant-id": tenantId },
+      next: { revalidate: 300 },
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const tenant = data.data
+      return {
+        title: `${tenant.company_name} - Online Randevu`,
+        description: `${tenant.company_name} online randevu sistemi. Hemen randevu alın.`,
+        openGraph: {
+          title: `${tenant.company_name} - Online Randevu`,
+          description: `${tenant.company_name} online randevu sistemi.`,
+          ...(tenant.logo_url ? { images: [tenant.logo_url] } : {}),
+        },
+      }
+    }
+  } catch {
+    // Metadata alınamazsa default
+  }
+
+  return {
+    title: "Online Randevu",
+    description: "Online randevu sistemi",
+  }
+}
 
 const features = [
   {
@@ -70,7 +116,16 @@ const sectors = [
   { name: "Spor & Fitness", icon: "🏋️" },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  // ─── Tenant kontrolü: custom domain'den geliyorsa tenant sayfası göster ────
+  const headersList = await headers()
+  const tenantId = headersList.get("x-tenant-id")
+
+  if (tenantId) {
+    return <TenantHome tenantId={tenantId} />
+  }
+
+  // ─── Ana domain: Randevya pazarlama sayfası ────────────────────────────────
   return (
     <div className="flex flex-col min-h-full">
       <Navbar />
