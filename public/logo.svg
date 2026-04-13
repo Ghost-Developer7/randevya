@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="80" viewBox="0 0 300 80">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2a5cff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a3fcc;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#2a5cff" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <!-- Icon box -->
+  <rect x="10" y="12" width="56" height="56" rx="14" fill="url(#grad)" filter="url(#shadow)"/>
+  <!-- Calendar body -->
+  <rect x="22" y="22" width="32" height="32" rx="5" fill="none" stroke="white" stroke-width="2.5"/>
+  <!-- Calendar hooks -->
+  <line x1="30" y1="18" x2="30" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="46" y1="18" x2="46" y2="26" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Clock circle -->
+  <circle cx="38" cy="42" r="7" fill="none" stroke="white" stroke-width="1.8"/>
+  <!-- Clock hands -->
+  <line x1="38" y1="42" x2="38" y2="38" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="38" y1="42" x2="41" y2="43.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  <!-- Text -->
+  <text x="80" y="52" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="36" font-weight="700" fill="#18181b" letter-spacing="-0.5">Randevya</text>
+</svg>

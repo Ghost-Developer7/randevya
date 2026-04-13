@@ -27,6 +27,8 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
   const merchantKey = process.env.PAYTR_MERCHANT_KEY!
   const merchantSalt = process.env.PAYTR_MERCHANT_SALT!
 
+  const testMode = process.env.NODE_ENV === "production" ? "0" : "1"
+
   // Hash oluştur
   const hashStr =
     merchantId +
@@ -38,7 +40,7 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
     "0" + // no_installment
     "0" + // max_installment
     "TL" +
-    "1"   // test_mode — production'da "0" yap
+    testMode
 
   const paytrToken = crypto
     .createHmac("sha256", merchantKey + merchantSalt)
@@ -63,7 +65,7 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
     merchant_fail_url: `${process.env.NEXTAUTH_URL}/api/webhooks/paytr/fail`,
     timeout_limit: "30",
     currency: "TL",
-    test_mode: process.env.NODE_ENV === "production" ? "0" : "1",
+    test_mode: testMode,
     lang: "tr",
   })
 

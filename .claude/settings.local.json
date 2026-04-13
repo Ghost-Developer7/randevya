@@ -32,7 +32,9 @@
       "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)/\"*/)",
       "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/next/dist/docs -type f -name *middleware*)",
       "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/next/dist/docs -type f \\\\\\(-name *middleware* -o -name *.md \\\\\\))",
-      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")"
+      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")",
+      "Bash(npx --yes sharp-cli --input public/logo.svg --output public/logo.png --width 300)",
+      "Bash(node -e \"const sharp = require\\(''sharp''\\); sharp\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).metadata\\(\\).then\\(m => console.log\\(m.width + ''x'' + m.height, Math.round\\(require\\(''fs''\\).statSync\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).size/1024\\)+''KB''\\)\\)\")"
     ]
   }
 }
