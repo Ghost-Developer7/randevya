@@ -5,6 +5,7 @@ import { isSlotAvailable } from "@/lib/slots"
 import { notifyAppointmentCreated } from "@/lib/notifications"
 import { fireWebhook } from "@/lib/webhook"
 import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { verifyTurnstile } from "@/lib/turnstile"
 import type { CreateAppointmentRequest } from "@/types"
 
 // POST /api/appointments — randevu oluştur
@@ -12,8 +13,17 @@ async function postHandler(req: NextRequest) {
   const tenant = await getTenantFromRequest(req)
   if (!tenant) return err("Tenant bulunamadı", 404)
 
-  const { body, error } = await parseBody<CreateAppointmentRequest>(req)
+  const { body, error } = await parseBody<CreateAppointmentRequest & { turnstileToken?: string }>(req)
   if (error) return error
+
+  // Turnstile doğrulaması
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? req.headers.get("x-real-ip")
+  if (body!.turnstileToken) {
+    const valid = await verifyTurnstile(body!.turnstileToken, ip)
+    if (!valid) return err("Güvenlik doğrulaması başarısız. Lütfen tekrar deneyin.", 403, "TURNSTILE_FAILED")
+  } else if (process.env.TURNSTILE_SECRET_KEY) {
+    return err("Güvenlik doğrulaması gerekli", 403, "TURNSTILE_REQUIRED")
+  }
 
   const { service_id, staff_id, start_time, customer_name, customer_phone, customer_email, notes } = body!
 

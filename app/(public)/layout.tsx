@@ -71,24 +71,9 @@ export default async function PublicLayout({
 }) {
   const tenant = await getTenantConfig()
 
+  // Platform domaini üzerinden erişim (sozlesmeler vb.) — tenant chrome'suz göster
   if (!tenant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-zinc-200 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-semibold text-zinc-900">
-            İşletme Bulunamadı
-          </h1>
-          <p className="mt-2 text-sm text-zinc-500">
-            Bu adreste kayıtlı bir işletme yok. Adresi kontrol edin.
-          </p>
-        </div>
-      </div>
-    )
+    return <>{children}</>
   }
 
   const theme = tenant.theme_config || {}

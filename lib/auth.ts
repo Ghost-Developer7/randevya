@@ -82,10 +82,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         // ── Env'den tanımlı fallback admin (seed olmadan acil erişim) ─────────
-        if (
-          email === process.env.ADMIN_EMAIL &&
-          process.env.ADMIN_PASSWORD_HASH
-        ) {
+        const adminEmails = (process.env.ADMIN_EMAIL || "")
+          .split(",")
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean)
+        if (adminEmails.includes(email) && process.env.ADMIN_PASSWORD_HASH) {
           const valid = await bcrypt.compare(credentials.password, process.env.ADMIN_PASSWORD_HASH)
           if (!valid) return null
           return {

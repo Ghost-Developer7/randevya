@@ -1,0 +1,16 @@
+{
+  "name": "Randevya",
+  "short_name": "Randevya",
+  "description": "Online Randevu Yönetim Platformu",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2a5cff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}

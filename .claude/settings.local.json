@@ -26,7 +26,13 @@
       "Bash(taskkill /PID 46404 /F)",
       "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/app/api -type f -name \"route.ts\" -path \"*/panel/*\" -exec grep -l \"findUnique\\\\|findFirst\" {} \\\\;)",
       "Bash(npx next:*)",
-      "Bash(wc -l \"app/\\(panel\\)/panel/bildirimler/page.tsx\")"
+      "Bash(wc -l \"app/\\(panel\\)/panel/bildirimler/page.tsx\")",
+      "Bash(grep -E \"\\\\.\\(ts|js\\)$\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)/\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)/\"*/)",
+      "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/next/dist/docs -type f -name *middleware*)",
+      "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/next/dist/docs -type f \\\\\\(-name *middleware* -o -name *.md \\\\\\))",
+      "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")"
     ]
   }
 }

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
+import Turnstile from "@/components/ui/Turnstile"
 
 type BookingState = {
   step: 1 | 2 | 3 | 4 | 5 | 6 | 7
@@ -58,6 +59,7 @@ export default function BookingStepper() {
   const [slots, setSlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [reservationId, setReservationId] = useState<string | null>(null)
   const [kvkkAccepted, setKvkkAccepted] = useState(false)
 
@@ -119,6 +121,7 @@ export default function BookingStepper() {
           customer_email: state.customer_email,
           notes: state.notes || undefined,
           payment_method: state.payment_method,
+          turnstileToken,
         }),
       })
       const data = await res.json()
@@ -143,6 +146,10 @@ export default function BookingStepper() {
   if (state.step === 1 && services.length === 0 && !loading) {
     fetchServices()
   }
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token)
+  }, [])
 
   const goBack = () => {
     setError("")
@@ -490,13 +497,21 @@ export default function BookingStepper() {
             </button>
           </div>
 
-          <div className="mt-6 flex gap-3">
+          {/* Turnstile doğrulama */}
+          <div className="mt-6 flex justify-center">
+            <Turnstile
+              onVerify={handleTurnstileVerify}
+              onExpire={() => setTurnstileToken(null)}
+            />
+          </div>
+
+          <div className="mt-4 flex gap-3">
             <Button variant="ghost" onClick={goBack}>&larr; Geri</Button>
             <Button
               fullWidth
               size="lg"
               loading={loading}
-              disabled={!state.payment_method}
+              disabled={!state.payment_method || !turnstileToken}
               onClick={handleSubmit}
             >
               Rezervasyon Oluştur
@@ -504,7 +519,7 @@ export default function BookingStepper() {
           </div>
 
           <p className="mt-3 text-xs text-zinc-400 text-center">
-            Rezervasyonunuz işletme onayına gönderilecektir. Onaylandıginda bildirim alacaksınız.
+            Rezervasyonunuz işletme onayına gönderilecektir. Onaylandığında bildirim alacaksınız.
           </p>
         </div>
       )}

@@ -1,87 +1,51 @@
-import { NextRequest, NextResponse } from "next/server"
-import { Redis } from "@upstash/redis"
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-const RANDEVYA_DOMAIN = "randevya.com"
-const TENANT_CACHE_TTL = 60 * 5 // 5 dakika
+const PLATFORM_HOSTS = new Set([
+  "randevya.com",
+  "www.randevya.com",
+])
 
-// Edge runtime'da çalışacak hafif Redis istemcisi
-function getRedis() {
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  if (!url || !token) return null
-  return new Redis({ url, token })
+function isPlatformDomain(host: string): boolean {
+  const h = host.split(":")[0] // port'u kaldır (localhost:3003)
+  return PLATFORM_HOSTS.has(h) || h === "localhost"
 }
 
-export async function proxy(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const host = req.headers.get("host") ?? ""
   const pathname = req.nextUrl.pathname
 
-  // Admin, API, Next.js internal ve static dosyalar için atla
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".")
-  ) {
+  // ─── Platform domaini (randevya.com / localhost) ─────────────────────────
+  if (isPlatformDomain(host)) {
+    // Tenant'a özel rotalar platform domaininde çalışmaz
+    if (pathname.startsWith("/randevu")) {
+      return NextResponse.redirect(new URL("/", req.url))
+    }
+    // Platform sayfaları normal akışta devam eder (marketing, panel, admin)
     return NextResponse.next()
   }
 
-  // Tenant çözümleme: önce Redis cache, yoksa header'a slug yaz
-  const tenantId = await resolveTenant(host, req)
+  // ─── Custom domain (müşteri işletme domaini) ────────────────────────────
 
-  if (!tenantId) {
-    // Platform ana sayfası veya 404
-    if (host === RANDEVYA_DOMAIN || host === `www.${RANDEVYA_DOMAIN}`) {
-      return NextResponse.next()
-    }
-    return NextResponse.rewrite(new URL("/not-found", req.url))
+  // Panel ve admin erişimi custom domain'de engelle
+  if (pathname.startsWith("/panel") || pathname.startsWith("/admin")) {
+    return NextResponse.redirect(new URL("/", req.url))
   }
 
-  // Tenant bilgisini header'a ekle — server component'ler ve API route'lar okur
-  const response = NextResponse.next()
-  response.headers.set("x-tenant-id", tenantId)
-  response.headers.set("x-tenant-host", host)
-  return response
-}
+  // x-tenant-id header'ını REQUEST'e ekle — server component'ler ve API route'lar okur
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-tenant-id", `custom:${host}`)
 
-async function resolveTenant(host: string, req: NextRequest): Promise<string | null> {
-  const cacheKey = `tenant_host:${host}`
-
-  // 1. Redis cache kontrolü
-  const redis = getRedis()
-  if (redis) {
-    try {
-      const cached = await redis.get<string>(cacheKey)
-      if (cached) return cached
-    } catch {
-      // Redis hata verirse devam et
-    }
-  }
-
-  // 2. DB sorgusu için API route'a proxy — middleware edge'de Prisma çalıştıramaz
-  //    tenant ID'yi app'e bir header aracılığıyla geçiriyoruz; asıl çözümleme
-  //    layout.tsx içinde getTenantByHost() ile yapılır.
-  //    Bu proxy yalnızca custom domain → slug yönlendirmesini yapar.
-
-  // Custom domain mi? (app.randevya.com veya alt domain değil)
-  const isCustomDomain =
-    !host.endsWith(`.${RANDEVYA_DOMAIN}`) && host !== RANDEVYA_DOMAIN
-
-  // Subdomain: hiralamerkezi.randevya.com → slug = "hiralamerkezi"
-  const subdomainMatch = host.match(new RegExp(`^(.+)\\.${RANDEVYA_DOMAIN.replace(".", "\\.")}$`))
-  const slug = subdomainMatch?.[1] ?? null
-
-  // Slug veya custom domain bilgisini header'a yaz; asıl DB sorgusu layout'ta
-  if (isCustomDomain || slug) {
-    const identifier = isCustomDomain ? `custom:${host}` : `slug:${slug}`
-    return identifier  // layout.tsx bu değerle getTenantByHost çağırır
-  }
-
-  return null
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    // Static assets ve Next.js internal dosyalarını hariç tut
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)",
   ],
 }
