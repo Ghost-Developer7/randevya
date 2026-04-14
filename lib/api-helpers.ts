@@ -116,8 +116,22 @@ export async function getTenantFromRequest(req: NextRequest) {
 export async function requireTenantSession() {
   const session = await getServerSession(authOptions)
   if (!session) return { session: null, error: err("Giriş gerekli", 401) }
-  if (session.user.role !== "TENANT_OWNER") return { session: null, error: err("Yetkisiz", 403) }
-  return { session, error: null }
+  if (session.user.role === "TENANT_OWNER") return { session, error: null }
+
+  // Admin kullanıcı — ilk aktif tenant'ı kullan (panel önizleme)
+  if (session.user.role === "PLATFORM_ADMIN") {
+    const firstTenant = await db.tenant.findFirst({ where: { is_active: true }, select: { id: true } })
+    if (firstTenant) {
+      // session objesini klonla, tenant_id'yi set et
+      const adminAsSession = {
+        ...session,
+        user: { ...session.user, tenant_id: firstTenant.id, role: "TENANT_OWNER" as const },
+      }
+      return { session: adminAsSession, error: null }
+    }
+  }
+
+  return { session: null, error: err("Yetkisiz", 403) }
 }
 
 /** Herhangi bir admin rolü yeterli */

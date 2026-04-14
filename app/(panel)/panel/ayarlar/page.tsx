@@ -44,21 +44,6 @@ export default function SettingsPage() {
   // Business
   const [companyName, setCompanyName] = useState("")
   const [sector, setSector] = useState("")
-
-  // Profil + işletme bilgilerini API'den çek
-  useEffect(() => {
-    fetch("/api/panel/settings/profile")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success) {
-          setOwnerName(data.data.owner_name || "")
-          setOwnerEmail(data.data.owner_email || "")
-          setCompanyName(data.data.company_name || "")
-          setSector(data.data.sector || "")
-        }
-      })
-      .finally(() => setProfileLoading(false))
-  }, [])
   const [address, setAddress] = useState("")
   const [description, setDescription] = useState("")
 
@@ -67,11 +52,11 @@ export default function SettingsPage() {
   const [secondaryColor, setSecondaryColor] = useState("#ff4d2e")
   const [font, setFont] = useState("Inter")
   const [borderRadius, setBorderRadius] = useState("12px")
-  const [tagline, setTagline] = useState("Saçlarınız için en iyi bakım")
+  const [tagline, setTagline] = useState("")
 
   // Notifications
   const [emailNotif, setEmailNotif] = useState(true)
-  const [whatsappNotif, setWhatsappNotif] = useState(true)
+  const [whatsappNotif, setWhatsappNotif] = useState(false)
   const [reminderHours, setReminderHours] = useState(24)
 
   // Working hours
@@ -85,14 +70,90 @@ export default function SettingsPage() {
     sun: { active: false, start: "09:00", end: "18:00" },
   })
 
+  // Tüm ayarları API'den çek
+  useEffect(() => {
+    // Profil + İşletme
+    fetch("/api/panel/settings/profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setOwnerName(data.data.owner_name || "")
+          setOwnerEmail(data.data.owner_email || "")
+          setCompanyName(data.data.company_name || "")
+          setSector(data.data.sector || "")
+        }
+      })
+      .finally(() => setProfileLoading(false))
+
+    // Tema
+    fetch("/api/panel/theme")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data.theme) {
+          const t = data.data.theme
+          if (t.primary_color) setPrimaryColor(t.primary_color)
+          if (t.secondary_color) setSecondaryColor(t.secondary_color)
+          if (t.font) setFont(t.font)
+          if (t.border_radius) setBorderRadius(t.border_radius)
+          if (t.tagline !== undefined) setTagline(t.tagline)
+        }
+      })
+      .catch(() => {})
+
+    // İlk personelin çalışma saatlerini işletme çalışma saati olarak al
+    fetch("/api/panel/staff")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.data.length > 0) {
+          const wh = data.data[0].work_hours
+          if (wh) {
+            const mapped: Record<string, { active: boolean; start: string; end: string }> = {}
+            for (const day of ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]) {
+              const slots = wh[day]
+              if (slots && slots.length > 0) {
+                mapped[day] = { active: true, start: slots[0].start, end: slots[0].end }
+              } else {
+                mapped[day] = { active: false, start: "09:00", end: "18:00" }
+              }
+            }
+            setWorkHours(mapped as typeof workHours)
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const DAY_LABELS: Record<string, string> = {
     mon: "Pazartesi", tue: "Salı", wed: "Çarşamba", thu: "Perşembe",
     fri: "Cuma", sat: "Cumartesi", sun: "Pazar",
   }
 
-  const save = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const [saveError, setSaveError] = useState("")
+
+  const save = async () => {
+    setSaved(false)
+    setSaveError("")
+    try {
+      if (tab === "profil") {
+        const res = await fetch("/api/panel/settings/profile", {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner_name: ownerName, owner_email: ownerEmail }),
+        })
+        const data = await res.json()
+        if (!data.success) { setSaveError(data.error); return }
+      } else if (tab === "tema") {
+        const res = await fetch("/api/panel/theme", {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ primary_color: primaryColor, secondary_color: secondaryColor, font, border_radius: borderRadius, tagline }),
+        })
+        const data = await res.json()
+        if (!data.success) { setSaveError(data.error); return }
+      }
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch {
+      setSaveError("Kayıt sırasında bir hata oluştu")
+    }
   }
 
   return (
