@@ -21,19 +21,23 @@ export default async function AdminDashboard() {
 
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { label: "İşletmeler", desc: "Tüm işletmeleri yönet" },
-            { label: "Planlar", desc: "Abonelik planlarını düzenle" },
-            { label: "Destek", desc: "Destek taleplerini gör" },
+            { label: "İşletmeler", desc: "Tüm işletmeleri yönet", href: "/admin/tenants" },
+            { label: "Ödemeler & Faturalar", desc: "Ödemeleri takip et, fatura yükle", href: "/admin/odemeler" },
+            { label: "Kuponlar", desc: "İndirim kuponlarını yönet", href: "/admin/kuponlar" },
+            { label: "Planlar", desc: "Abonelik planlarını düzenle", href: "/admin/plans" },
+            { label: "E-Posta Ayarları", desc: "SMTP yapılandırması", href: "/admin/email-ayarlari" },
+            { label: "Destek", desc: "Destek taleplerini gör", href: "/admin/support" },
           ].map((item) => (
-            <div
+            <a
               key={item.label}
-              className="p-6 rounded-2xl bg-white border border-zinc-200"
+              href={item.href}
+              className="p-6 rounded-2xl bg-white border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all"
             >
               <h3 className="font-semibold text-zinc-900">
                 {item.label}
               </h3>
               <p className="text-sm text-zinc-500 mt-1">{item.desc}</p>
-            </div>
+            </a>
           ))}
         </div>
       </div>

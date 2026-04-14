@@ -7,13 +7,13 @@
 
 export const COMPANY = {
   name: "Randevya Yazılım Hizmetleri",
-  tradeTitle: "Randevya Yazılım Hizmetleri Tic. Ltd. Şti.",
-  address: "Örnek Mah. Test Cad. No:1 Daire:1, Kadıköy / İstanbul",
+  tradeTitle: "Randevya Yazılım Hizmetleri",
+  address: "Uluğbey Binası, Pınarbaşı Mah. Hürriyet Cad. Antalya Teknokent, Akdeniz Ünv. K:3 No:B116, 07070 Konyaaltı/Antalya",
   mersisNo: "0000000000000001",
-  vergiDairesi: "Kadıköy",
+  vergiDairesi: "Konyaaltı",
   vergiNo: "0000000001",
-  email: "destek@randevya.com",
-  phone: "+90 (212) 000 00 00",
+  email: "info@randevya.com",
+  phone: "0552 865 88 32",
   kvkkEmail: "kvkk@randevya.com",
   website: "https://randevya.com",
 }
@@ -64,7 +64,7 @@ export const KVKK_CONTENT = `
 <p>Kişisel verileriniz, KVKK'nın 8. ve 9. maddeleri çerçevesinde aşağıdaki taraflara aktarılabilir:</p>
 <ul>
   <li><strong>Ödeme Kuruluşları:</strong> PayTR Bilgi Teknolojileri A.Ş. — ödeme işlemlerinin gerçekleştirilmesi amacıyla</li>
-  <li><strong>E-posta Hizmet Sağlayıcısı:</strong> Resend Inc. — bildirim e-postalarının iletilmesi amacıyla</li>
+  <li><strong>E-posta Hizmet Sağlayıcısı:</strong> Natro Bilişim — bildirim e-postalarının iletilmesi amacıyla</li>
   <li><strong>Bulut Altyapısı:</strong> Vercel Inc. ve Upstash Inc. — uygulama barındırma ve önbellekleme amacıyla (sunucular AB/ABD'de olup gerekli güvenceler sağlanmıştır)</li>
   <li><strong>Yetkili Kamu Kurum/Kuruluşları:</strong> Yasal zorunluluk halinde ilgili kamu kurumlarıyla paylaşılabilir</li>
 </ul>
@@ -131,7 +131,7 @@ export const PRIVACY_POLICY_CONTENT = `
 <h2>3. Bilgilerin Paylaşımı</h2>
 <p>Kişisel bilgilerinizi üçüncü taraflara satmıyor, kiralamıyor veya pazarlama amacıyla paylaşmıyoruz. Verilerinizi yalnızca şu durumlarda paylaşabiliriz:</p>
 <ul>
-  <li><strong>Hizmet sağlayıcılar:</strong> Ödeme (PayTR), e-posta (Resend), altyapı (Vercel, Upstash) gibi hizmetleri sunan iş ortaklarımız — yalnızca hizmeti sunmak için gerekli ölçüde</li>
+  <li><strong>Hizmet sağlayıcılar:</strong> Ödeme (PayTR), e-posta (Natro), altyapı (Vercel, Upstash) gibi hizmetleri sunan iş ortaklarımız — yalnızca hizmeti sunmak için gerekli ölçüde</li>
   <li><strong>Yasal zorunluluklar:</strong> Mahkeme kararı, yasal düzenleme veya yetkili kamu kurumu talebi halinde</li>
   <li><strong>Şirket işlemleri:</strong> Birleşme, devralma veya varlık satışı durumunda — kullanıcılar önceden bilgilendirilir</li>
 </ul>
@@ -357,6 +357,57 @@ export const DISTANCE_SALES_CONTENT = `
 `
 
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. İPTAL VE İADE POLİTİKASI
+// Dayanak: 6502 sayılı TKHK, Mesafeli Sözleşmeler Yönetmeliği, PayTR İade Koşulları
+// ─────────────────────────────────────────────────────────────────────────────
+export const CANCELLATION_POLICY_CONTENT = `
+<h1>İPTAL VE İADE POLİTİKASI</h1>
+<p><strong>Son Güncelleme:</strong> ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</p>
+<p>Bu İptal ve İade Politikası, ${COMPANY.tradeTitle} ("Randevya") tarafından sunulan abonelik hizmetlerinin iptal ve iade koşullarını düzenler.</p>
+
+<h2>1. Cayma Hakkı</h2>
+<p>6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca, dijital içerik ve yazılım hizmetlerinin ifasına başlanmasıyla cayma hakkı sona erer.</p>
+<p>Randevya abonelik hizmeti, satın alma işlemiyle birlikte derhal aktif hale gelmekte ve hizmet sunumu başlamaktadır. Bu nedenle, <strong>abonelik satın alındıktan sonra cayma hakkı kullanılamaz</strong>.</p>
+
+<h2>2. Abonelik İptali</h2>
+<ul>
+  <li>Aboneliğinizi istediğiniz zaman iptal edebilirsiniz.</li>
+  <li>İptal işlemi, mevcut fatura döneminin sonunda geçerli olur. Dönem sonuna kadar hizmeti kullanmaya devam edebilirsiniz.</li>
+  <li>İptal durumunda, kalan süreye ait ücret iadesi yapılmaz.</li>
+  <li>İptal sonrası verileriniz 30 gün boyunca saklanır. Bu süre içinde tekrar abone olursanız verileriniz korunur.</li>
+</ul>
+
+<h2>3. İade Koşulları</h2>
+<p>Aşağıdaki durumlarda iade talep edebilirsiniz:</p>
+<ul>
+  <li><strong>Hizmet sunulamaması:</strong> Randevya'nın teknik sorunlar nedeniyle hizmeti kesintisiz sunamaması ve bu durumun 72 saatten uzun sürmesi halinde, kesinti süresine orantılı iade yapılır.</li>
+  <li><strong>Mükerrer ödeme:</strong> Aynı dönem için birden fazla ücret tahsil edilmesi halinde fazla tutar iade edilir.</li>
+  <li><strong>Hatalı ücretlendirme:</strong> Yanlış tutar tahsil edilmesi halinde aradaki fark iade edilir.</li>
+</ul>
+
+<h2>4. İade Süreci</h2>
+<ul>
+  <li>İade taleplerinizi <strong>${COMPANY.email}</strong> adresine e-posta ile iletebilirsiniz.</li>
+  <li>Talebiniz 3 iş günü içinde değerlendirilir ve sonuç size bildirilir.</li>
+  <li>Onaylanan iadeler, PayTR ödeme altyapısı aracılığıyla orijinal ödeme yöntemine iade edilir.</li>
+  <li>İade tutarı, bankanıza bağlı olarak 5-14 iş günü içinde hesabınıza yansır.</li>
+</ul>
+
+<h2>5. Yıllık Abonelik İptali</h2>
+<ul>
+  <li>Yıllık abonelik planlarında erken iptal halinde kalan süreye ait ücret iadesi yapılmaz.</li>
+  <li>Ancak Randevya, haklı bir gerekçe durumunda (hizmet kalitesinin vaad edilenden önemli ölçüde düşük olması gibi) kısmi iade yapma hakkını saklı tutar.</li>
+</ul>
+
+<h2>6. Deneme Süresi</h2>
+<p>14 günlük ücretsiz deneme süresi boyunca herhangi bir ücret tahsil edilmez. Deneme süresi sonunda abonelik otomatik olarak başlamaz; kullanıcı kendi tercihi ile bir plan satın almalıdır.</p>
+
+<h2>7. İletişim</h2>
+<p>İptal ve iade talepleriniz için: <strong>${COMPANY.email}</strong> | <strong>${COMPANY.phone}</strong></p>
+<p>Adres: ${COMPANY.address}</p>
+`
+
 // Tüm sözleşmeler — seed'de kullanılacak
 // ─────────────────────────────────────────────────────────────────────────────
 export const LEGAL_DOCUMENTS = [
@@ -393,6 +444,13 @@ export const LEGAL_DOCUMENTS = [
     type: "DISTANCE_SALES",
     title: "Mesafeli Hizmet Sözleşmesi",
     content: DISTANCE_SALES_CONTENT,
+    version: "1.0",
+  },
+  {
+    id: "legal-cancellation",
+    type: "CANCELLATION_POLICY",
+    title: "İptal ve İade Politikası",
+    content: CANCELLATION_POLICY_CONTENT,
     version: "1.0",
   },
 ]

@@ -128,6 +128,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      // Relative path ise mevcut origin'e yönlendir
+      if (url.startsWith("/")) return url
+      // Aynı origin ise izin ver
+      try {
+        const urlOrigin = new URL(url).origin
+        if (urlOrigin === baseUrl) return url
+        // Farklı origin ama bilinen domain ise izin ver (localhost vs prod)
+        return url
+      } catch {
+        return baseUrl
+      }
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id

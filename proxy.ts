@@ -21,7 +21,8 @@ export function proxy(req: NextRequest) {
     if (pathname.startsWith("/randevu")) {
       return NextResponse.redirect(new URL("/", req.url))
     }
-    // Platform sayfaları normal akışta devam eder (marketing, panel, admin)
+
+    // Platform sayfaları normal akışta devam eder
     return NextResponse.next()
   }
 

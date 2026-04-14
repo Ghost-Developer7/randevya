@@ -84,3 +84,16 @@ export async function checkPlanLimit(
   const max = tenant.plan.max_services
   return { allowed: current < max, current, max }
 }
+
+// Plan özellik kontrolü — boolean feature'lar için
+export async function checkPlanFeature(
+  tenantId: string,
+  feature: "whatsapp_enabled" | "custom_domain" | "analytics" | "priority_support" | "waitlist_enabled"
+): Promise<boolean> {
+  const tenant = await db.tenant.findUnique({
+    where: { id: tenantId },
+    include: { plan: { select: { whatsapp_enabled: true, custom_domain: true, analytics: true, priority_support: true, waitlist_enabled: true } } },
+  })
+  if (!tenant) return false
+  return !!tenant.plan[feature]
+}

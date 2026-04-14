@@ -2,16 +2,29 @@ import crypto from "crypto"
 import { db } from "@/lib/db"
 
 const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token"
+const PAYTR_REFUND_URL = "https://www.paytr.com/odeme/iade"
+
+// ─── KDV & Fiyatlandırma sabitleri ──────────────────────────────────────────
+export const KDV_RATE = 0.20
+export const YEARLY_MULTIPLIER = 9 // 9 ay öde, 12 ay kullan (3 ay hediye)
+
+export function calculatePricing(priceMonthly: number, billingPeriod: "MONTHLY" | "YEARLY") {
+  const netAmount = billingPeriod === "YEARLY"
+    ? priceMonthly * YEARLY_MULTIPLIER
+    : priceMonthly
+  const kdvAmount = Math.round(netAmount * KDV_RATE * 100) / 100
+  const totalAmount = Math.round((netAmount + kdvAmount) * 100) / 100
+  const paymentAmountKurus = Math.round(totalAmount * 100)
+  return { netAmount, kdvAmount, totalAmount, paymentAmountKurus }
+}
 
 // ─── Token üretme (iframe için) ──────────────────────────────────────────────
 
 export type PayTRTokenParams = {
-  tenantId: string
-  planId: string
-  merchantOid: string      // benzersiz sipariş numarası
+  merchantOid: string      // benzersiz sipariş numarası (max 64 karakter)
   email: string
-  paymentAmount: number    // KURUŞ cinsinden (₺299 = 29900)
-  userBasket: string       // JSON string: [["Plan adı", "fiyat", 1]]
+  paymentAmount: number    // KURUŞ cinsinden
+  userBasket: string       // JSON string (Base64 encode edilmemiş, fonksiyon içinde encode edilir)
   userIp: string
   userName: string
   userAddress: string
@@ -28,18 +41,24 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
   const merchantSalt = process.env.PAYTR_MERCHANT_SALT!
 
   const testMode = process.env.NODE_ENV === "production" ? "0" : "1"
+  const noInstallment = "0"
+  const maxInstallment = "0"
+  const currency = "TL"
 
-  // Hash oluştur
+  // user_basket Base64 encode (PayTR gereksinimi)
+  const encodedBasket = Buffer.from(params.userBasket).toString("base64")
+
+  // Hash oluştur — PayTR dokümantasyonuna göre sıralama
   const hashStr =
     merchantId +
     params.userIp +
     params.merchantOid +
     params.email +
     params.paymentAmount +
-    params.userBasket +
-    "0" + // no_installment
-    "0" + // max_installment
-    "TL" +
+    encodedBasket +
+    noInstallment +
+    maxInstallment +
+    currency +
     testMode
 
   const paytrToken = crypto
@@ -54,17 +73,17 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
     email: params.email,
     payment_amount: String(params.paymentAmount),
     paytr_token: paytrToken,
-    user_basket: params.userBasket,
-    debug_on: "0",
-    no_installment: "0",
-    max_installment: "0",
+    user_basket: encodedBasket,
+    debug_on: testMode === "1" ? "1" : "0",
+    no_installment: noInstallment,
+    max_installment: maxInstallment,
     user_name: params.userName,
     user_address: params.userAddress,
     user_phone: params.userPhone,
-    merchant_ok_url: `${process.env.NEXTAUTH_URL}/api/webhooks/paytr/ok`,
-    merchant_fail_url: `${process.env.NEXTAUTH_URL}/api/webhooks/paytr/fail`,
+    merchant_ok_url: `${process.env.NEXTAUTH_URL}/panel/odeme-basarili`,
+    merchant_fail_url: `${process.env.NEXTAUTH_URL}/panel/odeme-basarisiz`,
     timeout_limit: "30",
-    currency: "TL",
+    currency,
     test_mode: testMode,
     lang: "tr",
   })
@@ -106,20 +125,50 @@ export function verifyPayTRWebhook(params: {
   return expected === params.hash
 }
 
+// ─── Fatura numarası üretici ─────────────────────────────────────────────────
+
+async function generateInvoiceNumber(): Promise<string> {
+  const year = new Date().getFullYear()
+  const prefix = `INV-${year}-`
+
+  const last = await db.invoice.findFirst({
+    where: { invoice_number: { startsWith: prefix } },
+    orderBy: { invoice_number: "desc" },
+  })
+
+  const seq = last ? parseInt(last.invoice_number.split("-")[2]) + 1 : 1
+  return `${prefix}${String(seq).padStart(4, "0")}`
+}
+
 // ─── Ödeme başarılı — abonelik kaydı oluştur ─────────────────────────────────
 
 export async function handleSuccessfulPayment({
   tenantId,
   planId,
   merchantOid,
+  billingPeriod,
+  netAmount,
+  totalAmount,
+  billingAddressId,
+  couponId,
 }: {
   tenantId: string
   planId: string
   merchantOid: string
+  billingPeriod: "MONTHLY" | "YEARLY"
+  netAmount: number
+  totalAmount: number
+  billingAddressId: string
+  couponId?: string
 }): Promise<void> {
   const now = new Date()
   const endsAt = new Date(now)
-  endsAt.setMonth(endsAt.getMonth() + 1)  // 1 aylık abonelik
+
+  if (billingPeriod === "YEARLY") {
+    endsAt.setFullYear(endsAt.getFullYear() + 1)
+  } else {
+    endsAt.setMonth(endsAt.getMonth() + 1)
+  }
 
   // Mevcut aktif aboneliği EXPIRED yap
   await db.tenantSubscription.updateMany({
@@ -127,12 +176,20 @@ export async function handleSuccessfulPayment({
     data: { status: "EXPIRED" },
   })
 
+  // KDV hesapla
+  const kdvAmount = Math.round((totalAmount - netAmount) * 100) / 100
+
   // Yeni abonelik kaydı
-  await db.tenantSubscription.create({
+  const subscription = await db.tenantSubscription.create({
     data: {
       tenant_id: tenantId,
       plan_id: planId,
       paytr_ref: merchantOid,
+      billing_period: billingPeriod,
+      net_amount: netAmount,
+      total_amount: totalAmount,
+      billing_address_id: billingAddressId,
+      coupon_id: couponId ?? null,
       starts_at: now,
       ends_at: endsAt,
       status: "ACTIVE",
@@ -143,6 +200,21 @@ export async function handleSuccessfulPayment({
   await db.tenant.update({
     where: { id: tenantId },
     data: { plan_id: planId },
+  })
+
+  // Fatura kaydı oluştur
+  const invoiceNumber = await generateInvoiceNumber()
+  await db.invoice.create({
+    data: {
+      subscription_id: subscription.id,
+      billing_address_id: billingAddressId,
+      invoice_number: invoiceNumber,
+      net_amount: netAmount,
+      kdv_rate: 20,
+      kdv_amount: kdvAmount,
+      total_amount: totalAmount,
+      status: "FATURA_BEKLIYOR",
+    },
   })
 }
 
@@ -167,8 +239,6 @@ export async function isSubscriptionActive(tenantId: string): Promise<boolean> {
 
 // ─── İade (refund) ───────────────────────────────────────────────────────────
 
-const PAYTR_REFUND_URL = "https://www.paytr.com/odeme/iade"
-
 export async function refundPayment({
   merchantOid,
   amount,
@@ -182,7 +252,10 @@ export async function refundPayment({
   const merchantKey = process.env.PAYTR_MERCHANT_KEY!
   const merchantSalt = process.env.PAYTR_MERCHANT_SALT!
 
-  const hashStr = merchantId + merchantOid + amount + merchantSalt
+  // PayTR iade API'si return_amount'u TL cinsinden istiyor (nokta ayraçlı)
+  const returnAmountTL = (amount / 100).toFixed(2)
+
+  const hashStr = merchantId + merchantOid + returnAmountTL + merchantSalt
   const paytrToken = crypto
     .createHmac("sha256", merchantKey)
     .update(hashStr)
@@ -191,7 +264,7 @@ export async function refundPayment({
   const formData = new URLSearchParams({
     merchant_id: merchantId,
     merchant_oid: merchantOid,
-    return_amount: String(amount),
+    return_amount: returnAmountTL,
     paytr_token: paytrToken,
   })
 
@@ -237,6 +310,5 @@ export async function notifyExpiringSubscriptions(): Promise<string[]> {
     include: { tenant: true },
   })
 
-  // Bildirim gönderilecek email listesi döndür
   return expiring.map((s) => s.tenant.owner_email)
 }

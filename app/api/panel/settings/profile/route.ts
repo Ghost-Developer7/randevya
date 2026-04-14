@@ -1,4 +1,6 @@
 import { NextRequest } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { ok, err, requireTenantSession, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
@@ -68,11 +70,24 @@ export const PATCH = withErrorHandler(patchHandler, "PATCH /api/panel/settings/p
 
 // GET /api/panel/settings/profile — mevcut profil bilgileri
 async function getHandler() {
-  const { session, error } = await requireTenantSession()
-  if (error) return error
+  const session = await getServerSession(authOptions)
+  if (!session) return err("Giriş gerekli", 401)
+
+  // Admin kullanıcı
+  if (session.user.role === "PLATFORM_ADMIN") {
+    return ok({
+      owner_name: session.user.name ?? "",
+      owner_email: session.user.email ?? "",
+      company_name: "Platform Admin",
+      sector: "Yönetim",
+    })
+  }
+
+  // Tenant kullanıcı
+  if (session.user.role !== "TENANT_OWNER") return err("Yetkisiz", 403)
 
   const tenant = await db.tenant.findUnique({
-    where: { id: session!.user.tenant_id },
+    where: { id: session.user.tenant_id },
     select: { owner_name: true, owner_email: true, company_name: true, sector: true },
   })
   if (!tenant) return err("Tenant bulunamadı", 404)

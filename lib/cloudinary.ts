@@ -104,9 +104,37 @@ export function validateImageFile(file: File): string | null {
   return null
 }
 
+/**
+ * PDF dosyasını Cloudinary'ye yükler (resource_type: "raw").
+ * Fatura PDF'leri için kullanılır.
+ */
+export async function uploadPdfToCloudinary(
+  buffer: Buffer,
+  folder: string
+): Promise<{ url: string; publicId: string }> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "raw" },
+      (error, result) => {
+        if (error || !result) {
+          reject(error ?? new Error("PDF yükleme başarısız"))
+          return
+        }
+        resolve({ url: result.secure_url, publicId: result.public_id })
+      }
+    )
+    stream.end(buffer)
+  })
+}
+
+export const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
+export const ALLOWED_PDF_TYPES = ["application/pdf"]
+
 // Klasör yapısı — diğer projeden kesinlikle ayrılmış
 export const cloudinaryFolders = {
   tenantLogo: (tenantId: string) => `randevya/tenants/${tenantId}/logo`,
   staffPhoto: (tenantId: string, staffId: string) =>
     `randevya/tenants/${tenantId}/staff/${staffId}`,
+  invoicePdf: (tenantId: string, invoiceNumber: string) =>
+    `randevya/invoices/${tenantId}/${invoiceNumber}`,
 }

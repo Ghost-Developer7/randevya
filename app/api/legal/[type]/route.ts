@@ -7,7 +7,7 @@ import { db } from "@/lib/db"
 async function getHandler(_req: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   const { type } = await params
 
-  const VALID_TYPES = ["KVKK", "PRIVACY_POLICY", "TERMS_OF_USE", "COOKIE_POLICY", "DISTANCE_SALES"]
+  const VALID_TYPES = ["KVKK", "PRIVACY_POLICY", "TERMS_OF_USE", "COOKIE_POLICY", "DISTANCE_SALES", "CANCELLATION_POLICY"]
   const typeUpper = type.toUpperCase()
 
   if (!VALID_TYPES.includes(typeUpper)) {

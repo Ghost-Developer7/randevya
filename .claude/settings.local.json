@@ -34,7 +34,19 @@
       "Bash(find /c/Users/mehmet.kara/Desktop/m/github/randevya/node_modules/next/dist/docs -type f \\\\\\(-name *middleware* -o -name *.md \\\\\\))",
       "Bash(node -e \"console.log\\(require\\(''crypto''\\).randomBytes\\(32\\).toString\\(''base64url''\\)\\)\")",
       "Bash(npx --yes sharp-cli --input public/logo.svg --output public/logo.png --width 300)",
-      "Bash(node -e \"const sharp = require\\(''sharp''\\); sharp\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).metadata\\(\\).then\\(m => console.log\\(m.width + ''x'' + m.height, Math.round\\(require\\(''fs''\\).statSync\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).size/1024\\)+''KB''\\)\\)\")"
+      "Bash(node -e \"const sharp = require\\(''sharp''\\); sharp\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).metadata\\(\\).then\\(m => console.log\\(m.width + ''x'' + m.height, Math.round\\(require\\(''fs''\\).statSync\\(''C:/Users/mehmet.kara/Desktop/m/github/randevya/public/logo.png''\\).size/1024\\)+''KB''\\)\\)\")",
+      "Bash(grep -E \"\\\\.\\(ts|tsx|js\\)$\")",
+      "Bash(cat /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(admin\\\\\\)/admin/page.tsx)",
+      "Bash(grep -r \"paytr\\\\|PayTR\" /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.json --include=*.md)",
+      "Bash(npm uninstall:*)",
+      "Bash(curl -s \"http://localhost:3003/api/legal/PRIVACY_POLICY\")",
+      "Bash(curl -s \"http://localhost:3003/api/panel/settings/profile\")",
+      "Bash(grep -r https://randevya /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.tsx --include=*.ts --include=*.jsx --include=*.js)",
+      "Bash(grep -rn https://randevya.com /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.tsx --include=*.ts --include=*.jsx --include=*.js --include=*.html --include=*.md)",
+      "Bash(grep -rn \"callbackUrl\\\\|redirect\\\\|window\\\\.location\" /c/Users/mehmet.kara/Desktop/m/github/randevya/app --include=*.tsx --include=*.ts)",
+      "Bash(grep -rn \"window\\\\.location\\\\|href.*https://\\\\|href.*http://\" /c/Users/mehmet.kara/Desktop/m/github/randevya/app /c/Users/mehmet.kara/Desktop/m/github/randevya/components --include=*.tsx --include=*.ts)",
+      "Bash(grep -rn \"redirect\\\\|NEXTAUTH_URL\\\\|callbackUrl\" /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.ts --include=*.tsx)",
+      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/.env*)"
     ]
   }
 }

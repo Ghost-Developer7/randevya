@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { REQUIRED_CONSENTS_TENANT } from "@/prisma/legal-content"
 import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { sendWelcomeEmail } from "@/lib/email"
 
 type RegisterRequest = {
   company_name: string
@@ -125,6 +126,33 @@ async function postHandler(req: NextRequest) {
       user_agent: userAgent ?? null,
     })),
   })
+
+  // 14 günlük deneme aboneliği oluştur
+  const trialStart = new Date()
+  const trialEnd = new Date(trialStart)
+  trialEnd.setDate(trialEnd.getDate() + 14)
+
+  await db.tenantSubscription.create({
+    data: {
+      tenant_id: tenant.id,
+      plan_id: starterPlan.id,
+      billing_period: "MONTHLY",
+      net_amount: 0,
+      total_amount: 0,
+      starts_at: trialStart,
+      ends_at: trialEnd,
+      status: "ACTIVE",
+      paytr_ref: "TRIAL",
+    },
+  })
+
+  // Hoşgeldin e-postası gönder
+  sendWelcomeEmail({
+    tenantId: tenant.id,
+    tenantEmail: owner_email.toLowerCase().trim(),
+    tenantName: owner_name.trim(),
+    companyName: company_name.trim(),
+  }).catch((e) => console.error("[Register] Welcome email hatası:", e))
 
   return ok(
     {

@@ -25,6 +25,7 @@ model Plan {
 
   tenants              Tenant[]
   tenant_subscriptions TenantSubscription[]
+  coupons              Coupon[]
 
   @@map("Plans")
 }
@@ -54,8 +55,10 @@ model Tenant {
   staff_services    StaffService[]
   appointments      Appointment[]
   waitlist          WaitlistEntry[]
-  subscriptions     TenantSubscription[]
-  notification_logs NotificationLog[]
+  subscriptions      TenantSubscription[]
+  billing_addresses  BillingAddress[]
+  coupon_usages      CouponUsage[]
+  notification_logs  NotificationLog[]
   error_logs        ErrorLog[]
   support_tickets   SupportTicket[]
   closed_days       ClosedDay[]
@@ -172,23 +175,110 @@ model WaitlistEntry {
 }
 
 // ──────────────────────────────────────────────
+// BILLING_ADDRESSES — Fatura adresleri
+// type: BIREYSEL | KURUMSAL
+// ──────────────────────────────────────────────
+model BillingAddress {
+  id           String   @id @default(uuid())
+  tenant_id    String
+  type         String   @db.NVarChar(20) // BIREYSEL | KURUMSAL
+  label        String?  @db.NVarChar(100) // "Ev Adresi", "Ofis" vb.
+  // Bireysel alanlar
+  full_name    String?  @db.NVarChar(255)
+  tc_kimlik    String?  @db.NVarChar(11)
+  // Kurumsal alanlar
+  company_name String?  @db.NVarChar(255)
+  tax_office   String?  @db.NVarChar(255) // Vergi Dairesi
+  tax_number   String?  @db.NVarChar(20)  // Vergi No
+  // Ortak alanlar
+  address      String   @db.NVarChar(500)
+  city         String   @db.NVarChar(100) // İl
+  district     String   @db.NVarChar(100) // İlçe
+  phone        String   @db.NVarChar(20)
+  is_default   Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  tenant        Tenant               @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  subscriptions TenantSubscription[]
+  invoices      Invoice[]
+
+  @@map("BillingAddresses")
+}
+
+// ──────────────────────────────────────────────
+// PENDING_PAYMENTS — Ödeme bekleyen işlemler
+// PayTR merchant_oid max 64 karakter olduğu için
+// ödeme metadata'sı burada tutulur
+// ──────────────────────────────────────────────
+model PendingPayment {
+  id                 String   @id @default(uuid())
+  tenant_id          String
+  plan_id            String
+  billing_period     String   @db.NVarChar(10) // MONTHLY | YEARLY
+  billing_address_id String
+  merchant_oid       String   @unique @db.NVarChar(64)
+  net_amount         Decimal  @db.Decimal(10, 2)
+  total_amount       Decimal  @db.Decimal(10, 2)
+  coupon_id          String?  // kullanılan kupon ID'si
+  status             String   @default("PENDING") @db.NVarChar(20) // PENDING | COMPLETED | FAILED
+  created_at         DateTime @default(now())
+
+  @@map("PendingPayments")
+}
+
+// ──────────────────────────────────────────────
 // TENANT_SUBSCRIPTIONS — Abonelik ödemeleri
 // status: ACTIVE | EXPIRED | CANCELLED | PENDING | REFUNDED
 // ──────────────────────────────────────────────
 model TenantSubscription {
-  id         String    @id @default(uuid())
-  tenant_id  String
-  plan_id    String
-  paytr_ref  String?   @db.NVarChar(255)
-  starts_at  DateTime
-  ends_at    DateTime
-  status     String    @default("ACTIVE") @db.NVarChar(20)
-  created_at DateTime  @default(now())
+  id                 String    @id @default(uuid())
+  tenant_id          String
+  plan_id            String
+  paytr_ref          String?   @db.NVarChar(255)
+  billing_period     String    @default("MONTHLY") @db.NVarChar(10) // MONTHLY | YEARLY
+  net_amount         Decimal?  @db.Decimal(10, 2)
+  total_amount       Decimal?  @db.Decimal(10, 2)
+  billing_address_id String?
+  coupon_id          String?
+  starts_at          DateTime
+  ends_at            DateTime
+  status             String    @default("ACTIVE") @db.NVarChar(20)
+  created_at         DateTime  @default(now())
 
-  tenant Tenant @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  plan   Plan   @relation(fields: [plan_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  tenant          Tenant          @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  plan            Plan            @relation(fields: [plan_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  billing_address BillingAddress? @relation(fields: [billing_address_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  coupon          Coupon?         @relation(fields: [coupon_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  invoices        Invoice[]
+  coupon_usages   CouponUsage[]
 
   @@map("TenantSubscriptions")
+}
+
+// ──────────────────────────────────────────────
+// INVOICES — Faturalar
+// status: FATURA_BEKLIYOR | FATURA_YUKLENDI
+// ──────────────────────────────────────────────
+model Invoice {
+  id                 String    @id @default(uuid())
+  subscription_id    String
+  billing_address_id String
+  invoice_number     String    @unique @db.NVarChar(20) // INV-2026-0001
+  net_amount         Decimal   @db.Decimal(10, 2)
+  kdv_rate           Int       @default(20)
+  kdv_amount         Decimal   @db.Decimal(10, 2)
+  total_amount       Decimal   @db.Decimal(10, 2)
+  status             String    @default("FATURA_BEKLIYOR") @db.NVarChar(30)
+  pdf_url            String?   @db.NVarChar(500)
+  pdf_public_id      String?   @db.NVarChar(255)
+  emailed_at         DateTime?
+  created_at         DateTime  @default(now())
+
+  subscription    TenantSubscription @relation(fields: [subscription_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  billing_address BillingAddress     @relation(fields: [billing_address_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("Invoices")
 }
 
 // ──────────────────────────────────────────────
@@ -329,7 +419,7 @@ model WebhookLog {
 
 // ──────────────────────────────────────────────
 // LEGAL_DOCUMENTS — Yasal sözleşme metinleri
-// type: PRIVACY_POLICY | TERMS_OF_USE | COOKIE_POLICY | KVKK | DISTANCE_SALES
+// type: PRIVACY_POLICY | TERMS_OF_USE | COOKIE_POLICY | KVKK | DISTANCE_SALES | CANCELLATION_POLICY
 // ──────────────────────────────────────────────
 model LegalDocument {
   id         String   @id @default(uuid())
@@ -381,4 +471,79 @@ model SupportMessage {
   admin  AdminUser?    @relation(fields: [admin_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
   @@map("SupportMessages")
+}
+
+// ──────────────────────────────────────────────
+// COUPONS — İndirim kuponları
+// ──────────────────────────────────────────────
+model Coupon {
+  id               String   @id @default(uuid())
+  code             String   @unique @db.NVarChar(50) // büyük harf: HOSGELDIN50
+  discount_percent Int      // 1-100
+  plan_id          String?  // null = tüm planlarda geçerli
+  valid_from       DateTime
+  valid_until      DateTime
+  max_uses         Int
+  used_count       Int      @default(0)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+
+  plan          Plan?                @relation(fields: [plan_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  usages        CouponUsage[]
+  subscriptions TenantSubscription[]
+
+  @@map("Coupons")
+}
+
+// ──────────────────────────────────────────────
+// COUPON_USAGES — Kupon kullanım logları
+// ──────────────────────────────────────────────
+model CouponUsage {
+  id              String   @id @default(uuid())
+  coupon_id       String
+  tenant_id       String
+  subscription_id String?
+  discount_amount Decimal  @db.Decimal(10, 2) // uygulanan indirim tutarı (TL)
+  original_amount Decimal  @db.Decimal(10, 2) // orijinal toplam tutar
+  final_amount    Decimal  @db.Decimal(10, 2) // indirimli tutar
+  used_at         DateTime @default(now())
+
+  coupon       Coupon              @relation(fields: [coupon_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  tenant       Tenant              @relation(fields: [tenant_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  subscription TenantSubscription? @relation(fields: [subscription_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  @@map("CouponUsages")
+}
+
+// ──────────────────────────────────────────────
+// EMAIL_CONFIG — SMTP e-posta ayarları (singleton)
+// Admin panelden değiştirilebilir
+// ──────────────────────────────────────────────
+model EmailConfig {
+  id         String   @id @default(uuid())
+  smtp_host  String   @db.NVarChar(255)
+  smtp_port  Int
+  smtp_secure Boolean @default(true)
+  smtp_user  String   @db.NVarChar(255)
+  smtp_pass  String   @db.NVarChar(255)
+  from_email String   @db.NVarChar(255)
+  from_name  String   @db.NVarChar(100)
+  is_active  Boolean  @default(true)
+  updated_at DateTime @updatedAt
+
+  @@map("EmailConfig")
+}
+
+// ──────────────────────────────────────────────
+// PASSWORD_RESET_TOKENS — Şifre sıfırlama tokenları
+// ──────────────────────────────────────────────
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  email      String   @db.NVarChar(255)
+  token      String   @unique @db.NVarChar(255)
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@map("PasswordResetTokens")
 }

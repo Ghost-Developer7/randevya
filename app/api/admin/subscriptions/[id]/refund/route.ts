@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server"
-import { ok, err, requireAdminSession, withErrorHandler } from "@/lib/api-helpers"
+import { ok, err, requireBillingAccess, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
 import { refundPayment } from "@/lib/paytr"
 
 // POST /api/admin/subscriptions/[id]/refund — admin iade başlatır
 async function postHandler(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireAdminSession()
+  const { error } = await requireBillingAccess()
   if (error) return error
 
   const { id } = await params
@@ -20,8 +20,9 @@ async function postHandler(req: NextRequest, { params }: { params: Promise<{ id:
   if (!subscription.paytr_ref) return err("Bu aboneliğe ait PayTR referansı yok")
   if (subscription.status === "REFUNDED") return err("Bu abonelik zaten iade edildi", 409)
 
-  // Varsayılan iade tutarı: plan aylık ücreti (kuruş)
-  const amount = body?.amount ?? Math.round(Number(subscription.plan.price_monthly ?? 0) * 100)
+  // İade tutarı: önce body'den, yoksa total_amount (KDV dahil), yoksa plan aylık fiyatı (kuruş)
+  const amount = body?.amount ??
+    Math.round(Number(subscription.total_amount ?? subscription.plan.price_monthly) * 100)
   if (!amount || amount <= 0) return err("Geçersiz iade tutarı")
 
   const result = await refundPayment({

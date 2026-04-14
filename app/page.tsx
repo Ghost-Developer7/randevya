@@ -12,10 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
   if (!tenantId) {
     return {
-      title: "Randevya - Online Randevu Yönetim Platformu",
+      title: "Randevya - Online Randevu Yönetim Platformu | Müşterileriniz Artık Sizden Online Randevu Alabilecek",
       description:
-        "İşletmeniz için online randevu sistemi. Kolay yönetim, otomatik bildirimler, müşteri takibi.",
-      keywords: ["randevu", "online randevu", "randevu sistemi", "kuaför randevu", "klinik randevu"],
+        "Müşterileriniz artık sizden online randevu alabilecek. İşletmeniz için online randevu sistemi. Kolay yönetim, otomatik bildirimler, müşteri takibi.",
+      keywords: ["randevu", "online randevu", "randevu sistemi", "kuaför randevu", "klinik randevu", "online randevu al", "randevu yönetimi", "işletme randevu sistemi"],
     }
   }
 
@@ -156,19 +156,19 @@ export default async function HomePage() {
             {/* CTA Buttons */}
             <div className="animate-fade-in-up-delay-2 mt-10 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
-                href="/kayit"
+                href="/panel/kayit"
                 className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-white bg-[#2a5cff] rounded-full hover:shadow-xl hover:shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-200"
               >
-                Randevu Al
+                Ücretsiz Dene
                 <svg className="ml-2 w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </Link>
               <Link
-                href="/panel/kayit"
+                href="/panel/giris"
                 className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-zinc-600 bg-white border border-zinc-200 rounded-full hover:border-zinc-300 hover:text-zinc-900 hover:-translate-y-0.5 transition-all duration-200"
               >
-                İşletmemi Ekle
+                Giriş Yap
               </Link>
             </div>
 
@@ -347,47 +347,136 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Dual CTA */}
-      <section className="py-20 bg-zinc-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Customer CTA */}
-            <div className="p-8 rounded-2xl bg-[#2a5cff] text-white">
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+      {/* Pricing */}
+      <section id="fiyatlandirma" className="py-24 bg-zinc-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900">Fiyatlandırma</h2>
+            <p className="mt-3 text-lg text-zinc-500">İşletmeniz için en uygun paketi seçin</p>
+            <p className="mt-1 text-sm text-zinc-400">Tüm fiyatlar aylık net tutardır, +%20 KDV uygulanır</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Deneme */}
+            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-7">
+              <h3 className="text-lg font-bold text-zinc-900">Deneme</h3>
+              <p className="text-xs text-zinc-500 mt-1">Giriş paketini 14 gün ücretsiz deneyin</p>
+              <div className="mt-5 mb-6">
+                <span className="text-4xl font-extrabold text-zinc-900">Ücretsiz</span>
+                <p className="text-xs text-zinc-400 mt-1">14 gün</p>
               </div>
-              <h3 className="text-xl font-bold mb-2">Müşteri misiniz?</h3>
-              <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                Ücretsiz üye olun, istediğiniz işletmeden kolayca randevu alın.
-                Onay bildirimi alın, ister online ödeyin ister yerinde.
-              </p>
-              <Link
-                href="/kayit"
-                className="inline-flex items-center px-5 py-2.5 text-sm font-semibold bg-white text-[#2a5cff] rounded-xl hover:bg-blue-50 transition-colors"
-              >
-                Ücretsiz Üye Ol
+              <ul className="space-y-2.5 mb-6">
+                {["Giriş paketi özellikleri", "14 gün süre limiti", "Kredi kartı gerekmez"].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
+                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-zinc-600 bg-zinc-100 rounded-xl hover:bg-zinc-200 transition-colors">
+                Ücretsiz Dene
               </Link>
             </div>
 
-            {/* Business CTA */}
-            <div className="p-8 rounded-2xl bg-white border-2 border-zinc-200">
-              <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {/* Giriş */}
+            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-7">
+              <h3 className="text-lg font-bold text-zinc-900">Giriş</h3>
+              <p className="text-xs text-zinc-500 mt-1">Küçük işletmeler için temel paket</p>
+              <div className="mt-5 mb-1">
+                <span className="text-4xl font-extrabold text-zinc-900">300 ₺</span>
+                <span className="text-sm text-zinc-400">/ay</span>
+              </div>
+              <p className="text-xs text-zinc-400 mb-6">+KDV (60 ₺) = 360 ₺/ay | Yıllık: 3.240 ₺ <span className="text-emerald-600 font-medium">(3 ay hediye)</span></p>
+              <ul className="space-y-2.5 mb-6">
+                {["5 personele kadar", "Sınırsız hizmet tanımı", "E-posta bildirimleri", "E-posta destek", "7/24 destek", "Basit analitik rapor"].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
+                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    {f}
+                  </li>
+                ))}
+                {["WhatsApp bildirim", "Özel alan adı"].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-400">
+                    <svg className="w-4 h-4 text-zinc-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors">
+                Hemen Başla
+              </Link>
+            </div>
+
+            {/* Profesyonel */}
+            <div className="relative rounded-2xl border-2 border-[#2a5cff] bg-white p-7 shadow-lg shadow-blue-500/10">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#2a5cff] text-white text-[10px] font-bold rounded-full uppercase">Önerilen</div>
+              <h3 className="text-lg font-bold text-zinc-900">Profesyonel</h3>
+              <p className="text-xs text-zinc-500 mt-1">Büyüyen işletmeler için gelişmiş paket</p>
+              <div className="mt-5 mb-1">
+                <span className="text-4xl font-extrabold text-zinc-900">600 ₺</span>
+                <span className="text-sm text-zinc-400">/ay</span>
+              </div>
+              <p className="text-xs text-zinc-400 mb-6">+KDV (120 ₺) = 720 ₺/ay | Yıllık: 6.480 ₺ <span className="text-emerald-600 font-medium">(3 ay hediye)</span></p>
+              <ul className="space-y-2.5 mb-6">
+                {["Sınırsız personel", "Sınırsız hizmet tanımı", "WhatsApp bildirim", "Özel alan adı (domain)", "7/24 öncelikli destek", "WhatsApp destek", "Tam analitik & raporlama", "Webhook & API erişimi"].map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
+                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-white bg-[#2a5cff] rounded-xl hover:opacity-90 shadow-md shadow-blue-500/20 transition-all">
+                Hemen Başla
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-zinc-400 mt-8">
+            Yıllık ödemede 9 aylık ücret ile 12 ay kullanım hakkı. Tüm paketler fatura dahildir.
+          </p>
+        </div>
+      </section>
+
+      {/* Dual CTA */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Business CTA — Primary */}
+            <div className="p-8 rounded-2xl bg-[#2a5cff] text-white">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-zinc-900 mb-2">İşletme sahibi misiniz?</h3>
-              <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
-                İşletmenizi Randevya'ya ekleyin, online randevu kabul edin.
-                Randevuları yönetin, müşterilerinize bildirim gönderin.
+              <h3 className="text-xl font-bold mb-2">İşletmenizi Dijitalleştirin</h3>
+              <p className="text-blue-100 text-sm mb-6 leading-relaxed">
+                Müşterileriniz artık sizden online randevu alabilecek.
+                14 gün ücretsiz deneyin, kredi kartı gerekmez.
               </p>
               <Link
                 href="/panel/kayit"
+                className="inline-flex items-center px-5 py-2.5 text-sm font-semibold bg-white text-[#2a5cff] rounded-xl hover:bg-blue-50 transition-colors"
+              >
+                Ücretsiz Dene
+              </Link>
+            </div>
+
+            {/* Already registered */}
+            <div className="p-8 rounded-2xl bg-white border-2 border-zinc-200">
+              <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-zinc-900 mb-2">Zaten kayıtlı mısınız?</h3>
+              <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+                İşletme panelinize giriş yapın, randevularınızı yönetin,
+                müşterilerinize bildirim gönderin.
+              </p>
+              <Link
+                href="/panel/giris"
                 className="inline-flex items-center px-5 py-2.5 text-sm font-semibold bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-colors"
               >
-                İşletme Kaydı
+                Giriş Yap
               </Link>
             </div>
           </div>
@@ -404,28 +493,32 @@ export default async function HomePage() {
               </div>
               <p className="text-sm leading-relaxed">
                 Online randevu platformu. Kolay, hızlı ve güvenli.
+                <br />Müşterileriniz artık sizden online randevu alabilecek.
               </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-3">Müşteriler</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/kayit" className="hover:text-white transition-colors">Üye Ol</Link></li>
-                <li><Link href="/giris" className="hover:text-white transition-colors">Giriş Yap</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold text-white mb-3">İşletmeler</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/panel/kayit" className="hover:text-white transition-colors">İşletme Kaydı</Link></li>
-                <li><Link href="/panel/giris" className="hover:text-white transition-colors">İşletme Girişi</Link></li>
-              </ul>
+              <div className="mt-4 space-y-1 text-sm">
+                <Link href="/panel/kayit" className="block hover:text-white transition-colors">Ücretsiz Dene</Link>
+                <Link href="/panel/giris" className="block hover:text-white transition-colors">Giriş Yap</Link>
+                <Link href="/#fiyatlandirma" className="block hover:text-white transition-colors">Fiyatlandırma</Link>
+              </div>
             </div>
             <div>
               <h4 className="text-sm font-semibold text-white mb-3">Yasal</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/sozlesmeler/PRIVACY_POLICY" className="hover:text-white transition-colors">Gizlilik Politikası</Link></li>
                 <li><Link href="/sozlesmeler/TERMS_OF_USE" className="hover:text-white transition-colors">Kullanım Koşulları</Link></li>
-                <li><Link href="/sozlesmeler/KVKK" className="hover:text-white transition-colors">KVKK</Link></li>
+                <li><Link href="/sozlesmeler/KVKK" className="hover:text-white transition-colors">KVKK Aydınlatma</Link></li>
+                <li><Link href="/sozlesmeler/COOKIE_POLICY" className="hover:text-white transition-colors">Çerez Politikası</Link></li>
+                <li><Link href="/sozlesmeler/DISTANCE_SALES" className="hover:text-white transition-colors">Mesafeli Satış Sözleşmesi</Link></li>
+                <li><Link href="/sozlesmeler/CANCELLATION_POLICY" className="hover:text-white transition-colors">İptal ve İade Politikası</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-white mb-3">İletişim</h4>
+              <ul className="space-y-2 text-sm">
+                <li className="leading-relaxed">Antalya Teknokent, Akdeniz Ünv. K:3 No:B116, Konyaaltı/Antalya</li>
+                <li><a href="tel:05528658832" className="hover:text-white transition-colors">0552 865 88 32</a></li>
+                <li><a href="mailto:info@randevya.com" className="hover:text-white transition-colors">info@randevya.com</a></li>
+                <li><Link href="/iletisim" className="text-[#2a5cff] hover:text-blue-400 transition-colors font-medium">İletişim Formu →</Link></li>
               </ul>
             </div>
           </div>

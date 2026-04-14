@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Logo from "@/components/ui/Logo"
+import Turnstile from "@/components/ui/Turnstile"
 
 const sectors = [
   "Kuaför / Berber",
@@ -40,6 +41,11 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("")
   const [passwordConfirm, setPasswordConfirm] = useState("")
 
+  // Turnstile
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const handleTurnstileVerify = useCallback((token: string) => setTurnstileToken(token), [])
+  const handleTurnstileExpire = useCallback(() => setTurnstileToken(null), [])
+
   // Step 3 - Consents
   const [consents, setConsents] = useState({
     KVKK: false,
@@ -60,7 +66,11 @@ export default function RegisterPage() {
       return
     }
     if (!allConsentsAccepted) {
-      setError("Tüm sozlesmeleri onaylamanız gerekiyor")
+      setError("Tüm sözleşmeleri onaylamanız gerekiyor")
+      return
+    }
+    if (!turnstileToken) {
+      setError("Lütfen güvenlik doğrulamasını tamamlayın")
       return
     }
 
@@ -135,12 +145,12 @@ export default function RegisterPage() {
                     <h3 className="font-bold text-base">Giriş</h3>
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-bold">299 ₺</span>
+                    <span className="text-lg font-bold">300 ₺</span>
                     <span className="text-xs text-blue-200">/ay</span>
                   </div>
                 </div>
                 <div className="flex justify-end mb-2">
-                  <span className="text-[11px] text-emerald-300">Yıllık öde <span className="font-bold line-through text-white/40">299 ₺</span> → <span className="font-bold">239 ₺</span>/ay <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">%20</span></span>
+                  <span className="text-[11px] text-emerald-300">Yıllık: 2.700 ₺ +KDV <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">3 Ay Hediye</span></span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-blue-100">
                   <span className="flex items-center gap-1.5">
@@ -171,12 +181,12 @@ export default function RegisterPage() {
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-bold text-base">Profesyonel</h3>
                   <div className="text-right">
-                    <span className="text-lg font-bold">599 ₺</span>
+                    <span className="text-lg font-bold">600 ₺</span>
                     <span className="text-xs text-blue-200">/ay</span>
                   </div>
                 </div>
                 <div className="flex justify-end mb-2">
-                  <span className="text-[11px] text-emerald-300">Yıllık öde <span className="font-bold line-through text-white/40">599 ₺</span> → <span className="font-bold">479 ₺</span>/ay <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">%20</span></span>
+                  <span className="text-[11px] text-emerald-300">Yıllık: 5.400 ₺ +KDV <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">3 Ay Hediye</span></span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-blue-100">
                   <span className="flex items-center gap-1.5">
@@ -398,6 +408,8 @@ export default function RegisterPage() {
                 </span>
               </label>
 
+              <Turnstile onVerify={handleTurnstileVerify} onExpire={handleTurnstileExpire} />
+
               <div className="flex gap-3">
                 <Button variant="outline" fullWidth size="lg" onClick={() => setStep(2)}>
                   Geri
@@ -406,7 +418,7 @@ export default function RegisterPage() {
                   fullWidth
                   size="lg"
                   loading={loading}
-                  disabled={!allConsentsAccepted}
+                  disabled={!allConsentsAccepted || !turnstileToken}
                   onClick={handleSubmit}
                 >
                   Kayıt Ol

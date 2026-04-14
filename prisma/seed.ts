@@ -304,7 +304,7 @@ async function main() {
     })
   }
 
-  console.log("✅ Yasal sözleşmeler oluşturuldu (5 adet)")
+  console.log(`✅ Yasal sözleşmeler oluşturuldu (${LEGAL_DOCUMENTS.length} adet)`)
   console.log("")
   console.log("─────────────────────────────────────────")
   console.log("📌 Test giriş bilgileri:")

@@ -1,18 +1,7 @@
 import { notFound } from "next/navigation"
+import { db } from "@/lib/db"
 
-async function getLegalDocument(type: string) {
-  try {
-    const res = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3003"}/api/legal/${type}`,
-      { next: { revalidate: 3600 } }
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.data
-  } catch {
-    return null
-  }
-}
+const VALID_TYPES = ["KVKK", "PRIVACY_POLICY", "TERMS_OF_USE", "COOKIE_POLICY", "DISTANCE_SALES", "CANCELLATION_POLICY"]
 
 export default async function LegalPage({
   params,
@@ -20,7 +9,14 @@ export default async function LegalPage({
   params: Promise<{ type: string }>
 }) {
   const { type } = await params
-  const doc = await getLegalDocument(type)
+  const typeUpper = type.toUpperCase()
+
+  if (!VALID_TYPES.includes(typeUpper)) notFound()
+
+  const doc = await db.legalDocument.findFirst({
+    where: { type: typeUpper, is_active: true },
+    select: { title: true, content: true, version: true },
+  })
 
   if (!doc) notFound()
 

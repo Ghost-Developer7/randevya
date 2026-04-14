@@ -17,7 +17,10 @@ async function getHandler(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const subscriptions = await db.tenantSubscription.findMany({
     where: { tenant_id: id },
-    include: { plan: { select: { name: true, price_monthly: true } } },
+    include: {
+      plan: { select: { name: true, price_monthly: true } },
+      invoices: { select: { id: true, invoice_number: true, status: true, pdf_url: true } },
+    },
     orderBy: { starts_at: "desc" },
   })
 
@@ -27,10 +30,14 @@ async function getHandler(req: NextRequest, { params }: { params: Promise<{ id: 
       id: s.id,
       plan_name: s.plan.name,
       price_monthly: s.plan.price_monthly,
+      billing_period: s.billing_period,
+      net_amount: s.net_amount,
+      total_amount: s.total_amount,
       starts_at: s.starts_at,
       ends_at: s.ends_at,
       status: s.status,
       paytr_ref: s.paytr_ref,
+      invoices: s.invoices,
     })),
   })
 }

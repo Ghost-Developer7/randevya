@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { ok, err, requireTenantSession, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
+import { checkPlanFeature } from "@/lib/tenant"
 
 const VALID_PERIODS = ["7d", "30d", "90d", "365d"] as const
 type Period = (typeof VALID_PERIODS)[number]
@@ -16,6 +17,12 @@ async function getHandler(req: NextRequest) {
   if (error) return error
 
   const tenantId = session!.user.tenant_id
+
+  // Plan kontrolü — analytics özelliği sadece Profesyonel pakette
+  const hasAnalytics = await checkPlanFeature(tenantId, "analytics")
+  if (!hasAnalytics) {
+    return err("Analitik özelliği planınızda bulunmuyor. Profesyonel pakete yükseltin.", 403)
+  }
   const { searchParams } = req.nextUrl
 
   const periodParam = searchParams.get("period") ?? "30d"
