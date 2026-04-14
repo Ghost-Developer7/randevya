@@ -1,52 +1,59 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 
 type Notification = {
   id: string
-  type: "new_appointment" | "cancelled" | "payment"
-  title: string
-  message: string
-  time: string
-  read: boolean
+  event_type: string
+  recipient: string
+  status: string
+  sent_at: string
 }
 
-const fakeNotifications: Notification[] = [
-  { id: "1", type: "new_appointment", title: "Yeni Randevu Talebi", message: "Elif Demir — Saç Kesimi, 15 Nis 14:00", time: "2 dk önce", read: false },
-  { id: "2", type: "new_appointment", title: "Yeni Randevu Talebi", message: "Mehmet Kaya — Sakal Tıraş, 16 Nis 10:30", time: "15 dk önce", read: false },
-  { id: "3", type: "cancelled", title: "Randevu İptali", message: "Ali Öztürk randevusunu iptal etti", time: "1 saat önce", read: false },
-  { id: "4", type: "new_appointment", title: "Yeni Randevu Talebi", message: "Ayşe Yılmaz — Cilt Bakımı, 17 Nis 16:00", time: "3 saat önce", read: true },
-]
+const EVENT_ICONS: Record<string, { color: string; icon: string; label: string }> = {
+  APPOINTMENT_CONFIRM: { color: "bg-emerald-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", label: "Randevu Onayı" },
+  APPOINTMENT_CANCEL: { color: "bg-red-500", icon: "M6 18L18 6M6 6l12 12", label: "Randevu İptali" },
+  APPOINTMENT_REMINDER: { color: "bg-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", label: "Hatırlatma" },
+  BUSINESS_NEW_APPOINTMENT: { color: "bg-blue-500", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", label: "Yeni Randevu" },
+  PAYMENT_CONFIRMATION: { color: "bg-emerald-500", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z", label: "Ödeme" },
+  INVOICE_SENT: { color: "bg-blue-500", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z", label: "Fatura" },
+  WAITLIST_NOTIFY: { color: "bg-violet-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", label: "Bekleme Listesi" },
+  WELCOME: { color: "bg-blue-500", icon: "M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: "Hoş Geldin" },
+}
 
-const typeIcon: Record<string, { color: string; icon: string }> = {
-  new_appointment: { color: "bg-amber-500", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-  cancelled: { color: "bg-red-500", icon: "M6 18L18 6M6 6l12 12" },
-  payment: { color: "bg-emerald-500", icon: "M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" },
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return "Az önce"
+  if (mins < 60) return `${mins} dk önce`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} saat önce`
+  const days = Math.floor(hours / 24)
+  return `${days} gün önce`
 }
 
 export default function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState(fakeNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
 
-  // localStorage'dan senkronize et
-  const [unreadCount, setUnreadCount] = useState(fakeNotifications.filter((n) => !n.read).length)
-
-  useEffect(() => {
-    const sync = () => {
-      const val = localStorage.getItem("randevya_unread")
-      if (val !== null) setUnreadCount(parseInt(val))
-    }
-    window.addEventListener("storage", sync)
-    // Initial sync
-    const val = localStorage.getItem("randevya_unread")
-    if (val !== null) setUnreadCount(parseInt(val))
-    return () => window.removeEventListener("storage", sync)
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await fetch("/api/panel/notifications?page=1")
+      const data = await res.json()
+      if (data.success) {
+        setNotifications(data.data.notifications.slice(0, 5))
+        setTotalCount(data.data.pagination.total)
+      }
+    } catch { /* ignore */ }
   }, [])
+
+  useEffect(() => { fetchNotifications() }, [fetchNotifications])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -55,12 +62,6 @@ export default function Header() {
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
-
-  const goToNotification = (id: string) => {
-    setOpen(false)
-    // Bildirimler sayfasına git ve ilgili bildirimi aç
-    router.push(`/panel/bildirimler?id=${id}`)
-  }
 
   return (
     <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
@@ -79,9 +80,9 @@ export default function Header() {
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
             </svg>
-            {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
-                {unreadCount}
+            {totalCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {totalCount > 99 ? "99+" : totalCount}
               </span>
             )}
           </button>
@@ -92,8 +93,8 @@ export default function Header() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
                 <h3 className="text-sm font-bold text-zinc-900">
                   Bildirimler
-                  {unreadCount > 0 && (
-                    <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-600 rounded-full">{unreadCount}</span>
+                  {totalCount > 0 && (
+                    <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-zinc-100 text-zinc-600 rounded-full">{totalCount}</span>
                   )}
                 </h3>
                 <button
@@ -105,30 +106,29 @@ export default function Header() {
               </div>
 
               <div className="max-h-80 overflow-y-auto divide-y divide-zinc-50">
-                {notifications.slice(0, 5).map((n) => {
-                  const tc = typeIcon[n.type] || typeIcon.payment
+                {notifications.length === 0 ? (
+                  <p className="text-xs text-zinc-400 text-center py-6">Bildirim yok</p>
+                ) : notifications.map((n) => {
+                  const cfg = EVENT_ICONS[n.event_type] ?? { color: "bg-zinc-500", icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z", label: n.event_type }
                   return (
                     <button
                       key={n.id}
-                      onClick={() => goToNotification(n.id)}
-                      className={`w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors ${!n.read ? "bg-blue-50/30" : ""}`}
+                      onClick={() => { setOpen(false); router.push("/panel/bildirimler") }}
+                      className="w-full text-left flex items-start gap-3 px-4 py-3 hover:bg-zinc-50 transition-colors"
                     >
-                      <div className={`w-7 h-7 rounded-lg ${tc.color} flex items-center justify-center shrink-0 mt-0.5`}>
+                      <div className={`w-7 h-7 rounded-lg ${cfg.color} flex items-center justify-center shrink-0 mt-0.5`}>
                         <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tc.icon} />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={cfg.icon} />
                         </svg>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className={`text-xs font-semibold truncate ${!n.read ? "text-zinc-900" : "text-zinc-500"}`}>{n.title}</p>
-                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-[#2a5cff] shrink-0" />}
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-0.5 truncate">{n.message}</p>
-                        <p className="text-[10px] text-zinc-400 mt-0.5">{n.time}</p>
+                        <p className="text-xs font-semibold text-zinc-900 truncate">{cfg.label}</p>
+                        <p className="text-[11px] text-zinc-500 mt-0.5 truncate">{n.recipient}</p>
+                        <p className="text-[10px] text-zinc-400 mt-0.5">{timeAgo(n.sent_at)}</p>
                       </div>
-                      <svg className="w-3.5 h-3.5 text-zinc-300 shrink-0 mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
+                      <span className={`text-[9px] px-1 py-0.5 rounded-full font-medium shrink-0 mt-1 ${n.status === "SENT" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}>
+                        {n.status === "SENT" ? "OK" : "HATA"}
+                      </span>
                     </button>
                   )
                 })}

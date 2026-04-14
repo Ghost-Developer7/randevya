@@ -66,16 +66,13 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const [unreadCount, setUnreadCount] = useState(3)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    const sync = () => {
-      const val = localStorage.getItem("randevya_unread")
-      setUnreadCount(val ? parseInt(val) : 0)
-    }
-    sync()
-    window.addEventListener("storage", sync)
-    return () => window.removeEventListener("storage", sync)
+    fetch("/api/panel/notifications?page=1")
+      .then((r) => r.json())
+      .then((data) => { if (data.success) setUnreadCount(data.data.pagination.total) })
+      .catch(() => {})
   }, [])
 
   return (
