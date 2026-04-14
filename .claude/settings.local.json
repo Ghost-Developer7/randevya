@@ -46,7 +46,8 @@
       "Bash(grep -rn \"callbackUrl\\\\|redirect\\\\|window\\\\.location\" /c/Users/mehmet.kara/Desktop/m/github/randevya/app --include=*.tsx --include=*.ts)",
       "Bash(grep -rn \"window\\\\.location\\\\|href.*https://\\\\|href.*http://\" /c/Users/mehmet.kara/Desktop/m/github/randevya/app /c/Users/mehmet.kara/Desktop/m/github/randevya/components --include=*.tsx --include=*.ts)",
       "Bash(grep -rn \"redirect\\\\|NEXTAUTH_URL\\\\|callbackUrl\" /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.ts --include=*.tsx)",
-      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/.env*)"
+      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/.env*)",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(admin\\)/admin/plans\")"
     ]
   }
 }

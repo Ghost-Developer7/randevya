@@ -44,13 +44,10 @@ async function getTransporter(): Promise<Transporter> {
   _transporter = nodemailer.createTransport({
     host: config.smtp_host,
     port: config.smtp_port,
-    secure: config.smtp_secure,
+    secure: false,
     auth: { user: config.smtp_user, pass: config.smtp_pass },
-    tls: {
-      rejectUnauthorized: false,
-      minVersion: "TLSv1" as const,
-      ciphers: "SSLv3",
-    },
+    tls: { rejectUnauthorized: false },
+    ...(config.smtp_port === 587 ? { requireTLS: true } : {}),
   })
 
   _transporterTs = Date.now()

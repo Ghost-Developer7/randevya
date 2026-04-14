@@ -25,12 +25,14 @@ async function postHandler(req: NextRequest) {
   }
 
   try {
+    const port = parseInt(smtp_port)
     const transporter = nodemailer.createTransport({
       host: smtp_host,
-      port: parseInt(smtp_port),
-      secure: smtp_secure !== false,
+      port,
+      secure: false,
       auth: { user: smtp_user, pass: password },
       tls: { rejectUnauthorized: false },
+      ...(port === 587 ? { requireTLS: true } : {}),
     })
 
     await transporter.sendMail({

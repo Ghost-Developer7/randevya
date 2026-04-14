@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import Logo from "@/components/ui/Logo"
 import Navbar from "@/components/public/Navbar"
 import TenantHome from "@/components/public/TenantHome"
+import { db } from "@/lib/db"
 
 // ─── Dinamik metadata: tenant varsa tenant adı, yoksa Randevya ──────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -124,6 +125,9 @@ export default async function HomePage() {
   if (tenantId) {
     return <TenantHome tenantId={tenantId} />
   }
+
+  // ─── Planları DB'den çek ────────────────────────────────────────────────────
+  const dbPlans = await db.plan.findMany({ orderBy: { price_monthly: "asc" } })
 
   // ─── Ana domain: Randevya pazarlama sayfası ────────────────────────────────
   return (
@@ -347,7 +351,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Pricing — DB'den dinamik */}
       <section id="fiyatlandirma" className="py-24 bg-zinc-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
@@ -356,78 +360,68 @@ export default async function HomePage() {
             <p className="mt-1 text-sm text-zinc-400">Tüm fiyatlar aylık net tutardır, +%20 KDV uygulanır</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {/* Deneme */}
-            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-7">
-              <h3 className="text-lg font-bold text-zinc-900">Deneme</h3>
-              <p className="text-xs text-zinc-500 mt-1">Giriş paketini 14 gün ücretsiz deneyin</p>
-              <div className="mt-5 mb-6">
-                <span className="text-4xl font-extrabold text-zinc-900">Ücretsiz</span>
-                <p className="text-xs text-zinc-400 mt-1">14 gün</p>
-              </div>
-              <ul className="space-y-2.5 mb-6">
-                {["Giriş paketi özellikleri", "14 gün süre limiti", "Kredi kartı gerekmez"].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
-                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-zinc-600 bg-zinc-100 rounded-xl hover:bg-zinc-200 transition-colors">
-                Ücretsiz Dene
-              </Link>
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200">
+              <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+              <span className="text-sm font-medium text-emerald-700">Tüm paketleri 14 gün ücretsiz deneyin — kredi kartı gerekmez</span>
             </div>
+          </div>
 
-            {/* Giriş */}
-            <div className="rounded-2xl border-2 border-zinc-200 bg-white p-7">
-              <h3 className="text-lg font-bold text-zinc-900">Giriş</h3>
-              <p className="text-xs text-zinc-500 mt-1">Küçük işletmeler için temel paket</p>
-              <div className="mt-5 mb-1">
-                <span className="text-4xl font-extrabold text-zinc-900">300 ₺</span>
-                <span className="text-sm text-zinc-400">/ay</span>
-              </div>
-              <p className="text-xs text-zinc-400 mb-6">+KDV (60 ₺) = 360 ₺/ay | Yıllık: 3.240 ₺ <span className="text-emerald-600 font-medium">(3 ay hediye)</span></p>
-              <ul className="space-y-2.5 mb-6">
-                {["5 personele kadar", "Sınırsız hizmet tanımı", "E-posta bildirimleri", "E-posta destek", "7/24 destek", "Basit analitik rapor"].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
-                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    {f}
-                  </li>
-                ))}
-                {["WhatsApp bildirim", "Özel alan adı"].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-400">
-                    <svg className="w-4 h-4 text-zinc-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-white bg-zinc-900 rounded-xl hover:bg-zinc-800 transition-colors">
-                Hemen Başla
-              </Link>
-            </div>
+          <div className={`grid grid-cols-1 gap-6 max-w-5xl mx-auto ${dbPlans.filter(p => Number(p.price_monthly) > 0).length <= 2 ? "md:grid-cols-2 max-w-3xl" : "md:grid-cols-3"}`}>
+            {/* DB'den gelen planlar */}
+            {dbPlans.map((plan, i) => {
+              const price = Number(plan.price_monthly)
+              if (price === 0) return null // Ücretsiz planı atla (deneme kartı zaten var)
+              const kdv = Math.round(price * 0.2)
+              const total = price + kdv
+              const yearly = Math.round(price * 9 * 1.2)
+              const isHighlighted = i === dbPlans.length - 1 // Son plan = en pahalı = önerilen
 
-            {/* Profesyonel */}
-            <div className="relative rounded-2xl border-2 border-[#2a5cff] bg-white p-7 shadow-lg shadow-blue-500/10">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#2a5cff] text-white text-[10px] font-bold rounded-full uppercase">Önerilen</div>
-              <h3 className="text-lg font-bold text-zinc-900">Profesyonel</h3>
-              <p className="text-xs text-zinc-500 mt-1">Büyüyen işletmeler için gelişmiş paket</p>
-              <div className="mt-5 mb-1">
-                <span className="text-4xl font-extrabold text-zinc-900">600 ₺</span>
-                <span className="text-sm text-zinc-400">/ay</span>
-              </div>
-              <p className="text-xs text-zinc-400 mb-6">+KDV (120 ₺) = 720 ₺/ay | Yıllık: 6.480 ₺ <span className="text-emerald-600 font-medium">(3 ay hediye)</span></p>
-              <ul className="space-y-2.5 mb-6">
-                {["Sınırsız personel", "Sınırsız hizmet tanımı", "WhatsApp bildirim", "Özel alan adı (domain)", "7/24 öncelikli destek", "WhatsApp destek", "Tam analitik & raporlama", "Webhook & API erişimi"].map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-zinc-600">
-                    <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/panel/kayit" className="block w-full py-3 text-center text-sm font-semibold text-white bg-[#2a5cff] rounded-xl hover:opacity-90 shadow-md shadow-blue-500/20 transition-all">
-                Hemen Başla
-              </Link>
-            </div>
+              const features: { text: string; has: boolean }[] = [
+                { text: plan.max_staff >= 999 ? "Sınırsız personel" : `${plan.max_staff} personele kadar`, has: true },
+                { text: plan.max_services >= 999 ? "Sınırsız hizmet" : `${plan.max_services} hizmete kadar`, has: true },
+                { text: "E-posta bildirimleri", has: true },
+                { text: "WhatsApp bildirim", has: plan.whatsapp_enabled },
+                { text: "Özel alan adı", has: plan.custom_domain },
+                { text: "Bekleme listesi", has: plan.waitlist_enabled },
+                { text: "Analitik & rapor", has: plan.analytics },
+                { text: "Öncelikli destek", has: plan.priority_support },
+              ]
+
+              return (
+                <div key={plan.id} className={`relative rounded-2xl border-2 bg-white p-7 ${isHighlighted ? "border-[#2a5cff] shadow-lg shadow-blue-500/10" : "border-zinc-200"}`}>
+                  {isHighlighted && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-[#2a5cff] text-white text-[10px] font-bold rounded-full uppercase">Önerilen</div>
+                  )}
+                  <h3 className="text-lg font-bold text-zinc-900">{plan.name}</h3>
+                  <p className="text-xs text-zinc-500 mt-1">{isHighlighted ? "Büyüyen işletmeler için gelişmiş paket" : "Küçük işletmeler için temel paket"}</p>
+                  <div className="mt-5 mb-1">
+                    <span className="text-4xl font-extrabold text-zinc-900">{price} ₺</span>
+                    <span className="text-sm text-zinc-400">/ay</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 mb-6">
+                    +KDV ({kdv} ₺) = {total} ₺/ay | Yıllık: {yearly.toLocaleString("tr-TR")} ₺ <span className="text-emerald-600 font-medium">(3 ay hediye)</span>
+                  </p>
+                  <ul className="space-y-2.5 mb-6">
+                    {features.map((f) => (
+                      <li key={f.text} className={`flex items-center gap-2 text-sm ${f.has ? "text-zinc-600" : "text-zinc-400"}`}>
+                        {f.has ? (
+                          <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-zinc-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        )}
+                        {f.text}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/panel/kayit" className={`block w-full py-3 text-center text-sm font-semibold rounded-xl transition-all ${
+                    isHighlighted ? "text-white bg-[#2a5cff] hover:opacity-90 shadow-md shadow-blue-500/20" : "text-white bg-zinc-900 hover:bg-zinc-800"
+                  }`}>
+                    Hemen Başla
+                  </Link>
+                </div>
+              )
+            })}
           </div>
 
           <p className="text-center text-xs text-zinc-400 mt-8">

@@ -183,7 +183,17 @@ export default function CouponsPage() {
                     >{c.is_active ? "Aktif" : "Deaktif"}</button>
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <button onClick={() => openDetail(c.id)} className="text-xs text-[#2a5cff] font-medium hover:underline">Detay</button>
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => openDetail(c.id)} className="text-xs text-[#2a5cff] font-medium hover:underline">Detay</button>
+                      <button
+                        onClick={() => {
+                          if (confirm(c.is_active ? `"${c.code}" kuponunu pasife almak istediğinize emin misiniz?` : `"${c.code}" kuponunu aktife almak istediğinize emin misiniz?`)) {
+                            toggleActive(c.id, !c.is_active)
+                          }
+                        }}
+                        className={`text-xs font-medium px-2 py-1 rounded-lg ${c.is_active ? "text-red-600 hover:bg-red-50" : "text-emerald-600 hover:bg-emerald-50"}`}
+                      >{c.is_active ? "Pasife Al" : "Aktife Al"}</button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -207,7 +217,22 @@ export default function CouponsPage() {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-zinc-600 mb-1">Kupon Kodu</label>
-                <input className={`${inputCls} font-mono uppercase`} placeholder="HOSGELDIN50" value={createForm.code} onChange={(e) => setCreateForm({ ...createForm, code: e.target.value.toUpperCase() })} />
+                <div className="flex gap-2">
+                  <input className={`${inputCls} font-mono uppercase flex-1`} placeholder="HOSGELDIN50" value={createForm.code} onChange={(e) => setCreateForm({ ...createForm, code: e.target.value.toUpperCase() })} />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+                      let code = ""
+                      for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)]
+                      setCreateForm({ ...createForm, code })
+                    }}
+                    className="px-3 py-2 text-xs font-medium rounded-xl border border-zinc-300 text-zinc-600 hover:bg-zinc-50 shrink-0"
+                    title="Rastgele kod üret"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
