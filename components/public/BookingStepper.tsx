@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Turnstile from "@/components/ui/Turnstile"
@@ -143,9 +143,12 @@ export default function BookingStepper() {
     }
   }
 
-  if (state.step === 1 && services.length === 0 && !loading) {
-    fetchServices()
-  }
+  useEffect(() => {
+    if (state.step === 1 && services.length === 0) {
+      fetchServices()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleTurnstileVerify = useCallback((token: string) => {
     setTurnstileToken(token)

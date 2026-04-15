@@ -22,7 +22,7 @@ async function getTenantConfig(): Promise<TenantConfig | null> {
 
   try {
     const res = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3003"}/api/tenant`,
+      `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.NEXTAUTH_URL || "http://localhost:3003")}/api/tenant`,
       {
         headers: { "x-tenant-id": tenantId },
         next: { revalidate: 300 },

@@ -18,7 +18,7 @@ type Service = { id: string; name: string; description?: string; duration_min: n
 type Staff = { id: string; full_name: string; title?: string; photo_url?: string }
 
 async function fetchTenantData(tenantId: string) {
-  const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3003"
+  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.NEXTAUTH_URL || "http://localhost:3003")
   const hdrs = { "x-tenant-id": tenantId }
 
   const [tenantRes, servicesRes, staffRes] = await Promise.all([

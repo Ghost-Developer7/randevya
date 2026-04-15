@@ -9,6 +9,39 @@ import Header from "@/components/panel/Header"
 const AUTH_PAGES = ["/panel/giris", "/panel/kayit", "/panel/sifremi-unuttum", "/panel/sifre-sifirla"]
 const SUB_FREE_PAGES = ["/panel/ayarlar", "/panel/odeme-basarili", "/panel/odeme-basarisiz"]
 
+function AdminPreviewBanner() {
+  const [previewTenant, setPreviewTenant] = useState<string | null>(null)
+
+  useEffect(() => {
+    // Cookie'den preview tenant bilgisini oku
+    const match = document.cookie.match(/(?:^|;\s*)admin_preview_tenant=([^;]+)/)
+    if (match) setPreviewTenant(match[1])
+  }, [])
+
+  if (!previewTenant) return null
+
+  const exitPreview = async () => {
+    await fetch("/api/admin/tenant-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "clear" }),
+    })
+    window.close()
+  }
+
+  return (
+    <div className="bg-amber-500 text-white px-4 py-2 text-center text-sm font-medium flex items-center justify-center gap-3">
+      <span>Admin onizleme modu</span>
+      <button
+        onClick={exitPreview}
+        className="px-3 py-1 text-xs font-semibold rounded-lg bg-white text-amber-600 hover:bg-amber-50 transition-colors"
+      >
+        Onizlemeden Cik
+      </button>
+    </div>
+  )
+}
+
 export default function PanelShell({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const pathname = usePathname()
@@ -65,11 +98,14 @@ export default function PanelShell({ children }: { children: React.ReactNode }) 
 
   // Normal panel — sidebar + header
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+    <div className="flex flex-col h-screen overflow-hidden bg-zinc-50">
+      <AdminPreviewBanner />
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
     </div>
   )

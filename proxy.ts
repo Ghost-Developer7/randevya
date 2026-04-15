@@ -7,8 +7,22 @@ const PLATFORM_HOSTS = new Set([
 ])
 
 function isPlatformDomain(host: string): boolean {
-  const h = host.split(":")[0] // port'u kaldır (localhost:3003)
-  return PLATFORM_HOSTS.has(h) || h === "localhost"
+  const h = host.split(":")[0]
+  if (PLATFORM_HOSTS.has(h) || h === "localhost") return true
+  return false
+}
+
+function getSubdomainTenantId(host: string): string | null {
+  const h = host.split(":")[0]
+  // xxx.randevya.com → slug:xxx
+  if (h.endsWith(".randevya.com")) {
+    const sub = h.replace(".randevya.com", "")
+    if (sub && sub !== "www") return `slug:${sub}`
+  }
+  // Dev: xxx.localhost → slug:xxx (hosts dosyasiyla test icin)
+  // Not: tarayici .localhost subdomainlerini desteklemez, bu yuzden
+  // xxx.randevya.com seklinde hosts dosyasina eklenmeli
+  return null
 }
 
 export function proxy(req: NextRequest) {
@@ -26,16 +40,17 @@ export function proxy(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // ─── Custom domain (müşteri işletme domaini) ────────────────────────────
+  // ─── Subdomain veya custom domain ───────────────────────────────────────
 
-  // Panel ve admin erişimi custom domain'de engelle
+  // Panel ve admin erişimi tenant domain'de engelle
   if (pathname.startsWith("/panel") || pathname.startsWith("/admin")) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 
-  // x-tenant-id header'ını REQUEST'e ekle — server component'ler ve API route'lar okur
+  // Subdomain (xxx.randevya.com) veya custom domain
+  const subTenantId = getSubdomainTenantId(host)
   const requestHeaders = new Headers(req.headers)
-  requestHeaders.set("x-tenant-id", `custom:${host}`)
+  requestHeaders.set("x-tenant-id", subTenantId || `custom:${host.split(":")[0]}`)
 
   return NextResponse.next({
     request: {

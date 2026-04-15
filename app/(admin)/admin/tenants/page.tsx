@@ -184,6 +184,23 @@ export default function TenantsPage() {
     }
   }
 
+  // ── Tenant önizleme ─────────────────────────────────────────────────────────
+  const previewTenant = async (tenant: Tenant) => {
+    try {
+      const res = await fetch("/api/admin/tenant-preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenant_id: tenant.id }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        window.open("/panel", "_blank")
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   // ── Tenant aktif/pasif ──────────────────────────────────────────────────────
   const toggleActive = async (tenant: Tenant) => {
     const newStatus = !tenant.is_active
@@ -296,6 +313,12 @@ export default function TenantsPage() {
                       {/* İşlem */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => previewTenant(tenant)}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                          >
+                            Panel
+                          </button>
                           <button
                             onClick={() => openDomainModal(tenant)}
                             className="px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-100 text-zinc-700 hover:bg-zinc-200 transition-colors"

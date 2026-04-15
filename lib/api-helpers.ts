@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { getServerSession } from "next-auth"
 import { authOptions, type AdminRole } from "@/lib/auth"
 import { db } from "@/lib/db"
@@ -118,14 +119,20 @@ export async function requireTenantSession() {
   if (!session) return { session: null, error: err("Giriş gerekli", 401) }
   if (session.user.role === "TENANT_OWNER") return { session, error: null }
 
-  // Admin kullanıcı — ilk aktif tenant'ı kullan (panel önizleme)
+  // Admin kullanıcı — cookie'den seçili tenant'ı kullan (panel önizleme)
   if (session.user.role === "PLATFORM_ADMIN") {
-    const firstTenant = await db.tenant.findFirst({ where: { is_active: true }, select: { id: true } })
-    if (firstTenant) {
-      // session objesini klonla, tenant_id'yi set et
+    const cookieStore = await cookies()
+    const previewTenantId = cookieStore.get("admin_preview_tenant")?.value
+    const tenantId = previewTenantId || undefined
+
+    const tenant = tenantId
+      ? await db.tenant.findFirst({ where: { id: tenantId, is_active: true }, select: { id: true } })
+      : await db.tenant.findFirst({ where: { is_active: true }, select: { id: true } })
+
+    if (tenant) {
       const adminAsSession = {
         ...session,
-        user: { ...session.user, tenant_id: firstTenant.id, role: "TENANT_OWNER" as const },
+        user: { ...session.user, tenant_id: tenant.id, role: "TENANT_OWNER" as const },
       }
       return { session: adminAsSession, error: null }
     }

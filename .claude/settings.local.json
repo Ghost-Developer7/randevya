@@ -47,7 +47,15 @@
       "Bash(grep -rn \"window\\\\.location\\\\|href.*https://\\\\|href.*http://\" /c/Users/mehmet.kara/Desktop/m/github/randevya/app /c/Users/mehmet.kara/Desktop/m/github/randevya/components --include=*.tsx --include=*.ts)",
       "Bash(grep -rn \"redirect\\\\|NEXTAUTH_URL\\\\|callbackUrl\" /c/Users/mehmet.kara/Desktop/m/github/randevya --include=*.ts --include=*.tsx)",
       "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/.env*)",
-      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(admin\\)/admin/plans\")"
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(admin\\)/admin/plans\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(npm rebuild:*)",
+      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(admin\\\\\\)/)",
+      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(admin\\\\\\)/admin/)",
+      "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(panel\\\\\\)/panel/)",
+      "Bash(ls /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(admin\\\\\\)/admin/tenants/)",
+      "Bash(curl -s http://localhost:3003/api/services -H \"x-tenant-id: slug:mehmet\")",
+      "Bash(curl -s http://localhost:3003/api/services -H \"Host: mehmet.randevya.com\")"
     ]
   }
 }
