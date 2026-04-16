@@ -36,19 +36,28 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
   token?: string
   error?: string
 }> {
-  const merchantId = process.env.PAYTR_MERCHANT_ID!
-  const merchantKey = process.env.PAYTR_MERCHANT_KEY!
-  const merchantSalt = process.env.PAYTR_MERCHANT_SALT!
+  const merchantId = process.env.PAYTR_MERCHANT_ID
+  const merchantKey = process.env.PAYTR_MERCHANT_KEY
+  const merchantSalt = process.env.PAYTR_MERCHANT_SALT
+  const baseUrl = process.env.NEXTAUTH_URL
 
-  const testMode = process.env.NODE_ENV === "production" ? "0" : "1"
+  if (!merchantId || !merchantKey || !merchantSalt) {
+    return { success: false, error: "PayTR API bilgileri eksik (env değişkenleri)" }
+  }
+  if (!baseUrl) {
+    return { success: false, error: "NEXTAUTH_URL tanımlı değil" }
+  }
+
+  const testMode = process.env.PAYTR_TEST_MODE === "1" ? "1" : "0"
   const noInstallment = "0"
   const maxInstallment = "0"
   const currency = "TL"
 
-  // user_basket Base64 encode (PayTR gereksinimi)
-  const encodedBasket = Buffer.from(params.userBasket).toString("base64")
+  // user_basket Base64 encode (PayTR gereksinimi) — hem hash'a hem form'a bu değer girer
+  const encodedBasket = Buffer.from(params.userBasket, "utf-8").toString("base64")
 
-  // Hash oluştur — PayTR dokümantasyonuna göre sıralama
+  // Hash sırası: merchant_id | user_ip | merchant_oid | email | payment_amount
+  //            | user_basket (base64) | no_installment | max_installment | currency | test_mode
   const hashStr =
     merchantId +
     params.userIp +
@@ -61,9 +70,11 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
     currency +
     testMode
 
+  // Token: HMAC_SHA256(key = merchant_key, data = hash_str + merchant_salt), base64
+  // (PayTR resmi örnekleri — PHP/Node ikisi de bu şekilde)
   const paytrToken = crypto
-    .createHmac("sha256", merchantKey + merchantSalt)
-    .update(hashStr)
+    .createHmac("sha256", merchantKey)
+    .update(hashStr + merchantSalt)
     .digest("base64")
 
   const formData = new URLSearchParams({
@@ -80,8 +91,8 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
     user_name: params.userName,
     user_address: params.userAddress,
     user_phone: params.userPhone,
-    merchant_ok_url: `${process.env.NEXTAUTH_URL}/panel/odeme-basarili`,
-    merchant_fail_url: `${process.env.NEXTAUTH_URL}/panel/odeme-basarisiz`,
+    merchant_ok_url: `${baseUrl}/panel/odeme-basarili`,
+    merchant_fail_url: `${baseUrl}/panel/odeme-basarisiz`,
     timeout_limit: "30",
     currency,
     test_mode: testMode,
@@ -89,19 +100,50 @@ export async function createPayTRToken(params: PayTRTokenParams): Promise<{
   })
 
   try {
-    const res = await fetch(PAYTR_API_URL, {
-      method: "POST",
-      body: formData,
-    })
-    const data = (await res.json()) as { status: string; token?: string; reason?: string }
+    // 15 saniye timeout — Vercel fonksiyonunu bekletmemek için
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 15_000)
+
+    let res: Response
+    try {
+      res = await fetch(PAYTR_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: formData.toString(),
+        signal: controller.signal,
+      })
+    } finally {
+      clearTimeout(timer)
+    }
+
+    const rawBody = await res.text()
+
+    let data: { status?: string; token?: string; reason?: string } = {}
+    try {
+      data = rawBody ? JSON.parse(rawBody) : {}
+    } catch {
+      console.error("[PayTR] JSON parse hatası. HTTP:", res.status, "body:", rawBody.slice(0, 500))
+      return {
+        success: false,
+        error: `PayTR geçersiz yanıt döndü (HTTP ${res.status})`,
+      }
+    }
 
     if (data.status !== "success") {
-      return { success: false, error: data.reason ?? "PayTR token alınamadı" }
+      console.error("[PayTR] Token reddedildi:", data.reason, "HTTP:", res.status)
+      return { success: false, error: data.reason ?? `PayTR token alınamadı (HTTP ${res.status})` }
     }
 
     return { success: true, token: data.token }
   } catch (e: unknown) {
-    return { success: false, error: e instanceof Error ? e.message : "Bağlantı hatası" }
+    const msg =
+      e instanceof Error
+        ? e.name === "AbortError"
+          ? "PayTR isteği zaman aşımına uğradı"
+          : e.message
+        : "Bağlantı hatası"
+    console.error("[PayTR] createPayTRToken hatası:", msg)
+    return { success: false, error: msg }
   }
 }
 
