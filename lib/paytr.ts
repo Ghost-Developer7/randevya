@@ -3,6 +3,7 @@ import { db } from "@/lib/db"
 
 const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token"
 const PAYTR_REFUND_URL = "https://www.paytr.com/odeme/iade"
+const PAYTR_REPORT_URL = "https://www.paytr.com/rapor/odeme-detayi"
 
 // ─── KDV & Fiyatlandırma sabitleri ──────────────────────────────────────────
 export const KDV_RATE = 0.20
@@ -165,6 +166,78 @@ export function verifyPayTRWebhook(params: {
     .digest("base64")
 
   return expected === params.hash
+}
+
+// ─── Ödeme Detay Servisi — belirli bir günün ödemelerini sorgular ───────────
+// Webhook kaçırıldığında manuel mutabakat için kullanılır.
+// date formatı: "YYYY-MM-DD"
+// API response: { status: "success", detail_list: { sales: [...], returns: [...] } }
+export type PayTRSaleRecord = {
+  merchant_oid: string
+  payment_amount?: number
+  payment_total?: number
+  paid_date?: string
+  [key: string]: unknown
+}
+
+export async function queryPayTRPaymentsByDate(
+  date: string
+): Promise<{
+  success: boolean
+  sales?: PayTRSaleRecord[]
+  returns?: PayTRSaleRecord[]
+  error?: string
+}> {
+  const merchantId = process.env.PAYTR_MERCHANT_ID
+  const merchantKey = process.env.PAYTR_MERCHANT_KEY
+  const merchantSalt = process.env.PAYTR_MERCHANT_SALT
+
+  if (!merchantId || !merchantKey || !merchantSalt) {
+    return { success: false, error: "PayTR env değişkenleri eksik" }
+  }
+
+  // hash: HMAC_SHA256(merchant_key, merchant_id + date + merchant_salt) → base64
+  const paytrToken = crypto
+    .createHmac("sha256", merchantKey)
+    .update(merchantId + date + merchantSalt)
+    .digest("base64")
+
+  const body = new URLSearchParams({
+    merchant_id: merchantId,
+    date,
+    paytr_token: paytrToken,
+  })
+
+  try {
+    const res = await fetch(PAYTR_REPORT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    })
+    const raw = await res.text()
+    let data: {
+      status?: string
+      detail_list?: { sales?: PayTRSaleRecord[]; returns?: PayTRSaleRecord[] }
+      err_msg?: string
+    } = {}
+    try {
+      data = raw ? JSON.parse(raw) : {}
+    } catch {
+      return { success: false, error: `PayTR geçersiz yanıt (HTTP ${res.status})` }
+    }
+
+    if (data.status !== "success") {
+      return { success: false, error: data.err_msg ?? `PayTR rapor hatası (HTTP ${res.status})` }
+    }
+
+    return {
+      success: true,
+      sales: data.detail_list?.sales ?? [],
+      returns: data.detail_list?.returns ?? [],
+    }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "Bağlantı hatası" }
+  }
 }
 
 // ─── Fatura numarası üretici ─────────────────────────────────────────────────
