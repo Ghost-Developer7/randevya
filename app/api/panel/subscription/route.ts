@@ -110,7 +110,8 @@ async function postHandler(req: NextRequest) {
     await handleSuccessfulPayment({
       tenantId,
       planId,
-      merchantOid: `FREE_${crypto.randomBytes(6).toString("hex")}_${Date.now()}`,
+      // merchant_oid: PayTR sadece alfanumerik kabul ediyor (alt çizgi/tire yasak)
+      merchantOid: `FREE${crypto.randomBytes(6).toString("hex")}${Date.now()}`,
       billingPeriod: billingPeriod as "MONTHLY" | "YEARLY",
       netAmount: 0,
       totalAmount: 0,
@@ -139,8 +140,9 @@ async function postHandler(req: NextRequest) {
   }
 
   // ─── Normal ödeme akışı (indirimli veya indirimsiz) ────────────────
+  // merchant_oid: PayTR sadece alfanumerik kabul ediyor (alt çizgi/tire yasak)
   const shortId = crypto.randomBytes(6).toString("hex")
-  const merchantOid = `PAY_${shortId}_${Date.now()}`
+  const merchantOid = `PAY${shortId}${Date.now()}`
 
   // PendingPayment kaydı oluştur
   await db.pendingPayment.create({
