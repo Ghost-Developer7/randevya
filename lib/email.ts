@@ -119,16 +119,33 @@ function baseTemplate(content: string, headerTitle?: string): string {
 </html>`
 }
 
+// Table-based — flexbox / grid email client'larda çalışmıyor (Gmail, Outlook bitişik render ediyor).
 function infoRow(label: string, value: string): string {
-  return `<div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-    <span style="color:#777;font-size:13px;">${label}</span>
-    <span style="color:#0d0d0d;font-size:13px;font-weight:600;">${value}</span>
-  </div>`
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:10px;">
+    <tr>
+      <td align="left" style="color:#777;font-size:13px;padding:0;">${label}</td>
+      <td align="right" style="color:#0d0d0d;font-size:13px;font-weight:600;padding:0 0 0 12px;white-space:nowrap;">${value}</td>
+    </tr>
+  </table>`
 }
 
 function ctaButton(text: string, url: string, color = "#0d0d0d"): string {
   return `<div style="text-align:center;margin-top:24px;">
     <a href="${url}" style="display:inline-block;background:${color};color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;" target="_blank">${text}</a>
+  </div>`
+}
+
+// Status banner — e-postanın üstünde renkli daire içinde ikon gösterir.
+// type: success (yeşil tik), warning (amber ünlem), danger (kırmızı X), info (mavi bilgi)
+function statusBanner(type: "success" | "warning" | "danger" | "info"): string {
+  const config = {
+    success: { bg: "#dcfce7", fg: "#16a34a", symbol: "&#10004;" }, // ✔
+    warning: { bg: "#fef3c7", fg: "#d97706", symbol: "!" },
+    danger:  { bg: "#fee2e2", fg: "#dc2626", symbol: "&#10006;" }, // ✖
+    info:    { bg: "#dbeafe", fg: "#2563eb", symbol: "i" },
+  }[type]
+  return `<div style="text-align:center;margin-bottom:20px;">
+    <div style="display:inline-block;width:64px;height:64px;line-height:64px;border-radius:50%;background:${config.bg};color:${config.fg};font-size:32px;font-weight:700;text-align:center;">${config.symbol}</div>
   </div>`
 }
 
@@ -164,15 +181,16 @@ export async function sendAppointmentConfirm(params: {
       <p style="color:rgba(255,255,255,0.6);font-size:13px;margin:0;">${params.companyName}</p>
     </div>
     <div style="padding:36px 40px;">
-      <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Randevunuz Onaylandı</h1>
-      <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.customerName}</strong>, randevunuz oluşturuldu.</p>
+      ${statusBanner("success")}
+      <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Randevunuz Onaylandı</h1>
+      <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.customerName}</strong>, randevunuz oluşturuldu.</p>
       <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
         ${infoRow("Hizmet", params.serviceName)}
         ${infoRow("Personel", params.staffName)}
         ${infoRow("Tarih", date)}
         ${infoRow("Saat", time)}
       </div>
-      <p style="color:#777;font-size:12px;margin:0;">Sorularınız için lütfen bizimle iletişime geçin.</p>
+      <p style="color:#777;font-size:12px;margin:0;text-align:center;">Sorularınız için lütfen bizimle iletişime geçin.</p>
     </div>
     <div style="background:#f5f3ef;padding:18px 40px;text-align:center;">
       <p style="color:#aaa;font-size:11px;margin:0;">${params.companyName} tarafından${params.isWhiteLabel ? "" : " Randevya aracılığıyla"} gönderilmiştir.</p>
@@ -195,14 +213,15 @@ export async function sendAppointmentCancel(params: {
   const time = formatTime(params.startTime)
 
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Randevunuz İptal Edildi</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.customerName}</strong>, randevunuz iptal edilmiştir.</p>
+    ${statusBanner("danger")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Randevunuz İptal Edildi</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.customerName}</strong>, randevunuz iptal edilmiştir.</p>
     <div style="background:#fff0ee;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Hizmet", params.serviceName)}
       ${infoRow("Tarih", date)}
       ${infoRow("Saat", time)}
     </div>
-    <p style="color:#777;font-size:12px;margin:0;">Yeni randevu almak için lütfen bizimle iletişime geçin.</p>`
+    <p style="color:#777;font-size:12px;margin:0;text-align:center;">Yeni randevu almak için lütfen bizimle iletişime geçin.</p>`
 
   const from = `${params.companyName} <${process.env.SMTP_FROM_EMAIL ?? "noreply@randevya.com"}>`
   const result = await sendMail(params.customerEmail, "Randevunuz iptal edildi", baseTemplate(content, params.companyName), from)
@@ -218,8 +237,9 @@ export async function sendAppointmentReminder(params: {
   const time = formatTime(params.startTime)
 
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Randevu Hatırlatma</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.customerName}</strong>, yarın randevunuz var.</p>
+    ${statusBanner("info")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Randevu Hatırlatma</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.customerName}</strong>, yarın randevunuz var.</p>
     <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Hizmet", params.serviceName)}
       ${infoRow("Personel", params.staffName)}
@@ -243,8 +263,9 @@ export async function sendWaitlistNotify(params: {
   const mins = params.expireMinutes ?? 30
 
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Bekleme Listesi — Slot Açıldı!</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.customerName}</strong>, beklediğiniz randevu slotu açıldı.</p>
+    ${statusBanner("success")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Bekleme Listesi — Slot Açıldı!</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.customerName}</strong>, beklediğiniz randevu slotu açıldı.</p>
     <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Hizmet", params.serviceName)}
       ${infoRow("Tarih", date)}
@@ -307,8 +328,9 @@ export async function sendPaymentConfirmation(params: {
 }): Promise<EmailResult> {
   const periodLabel = params.billingPeriod === "YEARLY" ? "Yıllık" : "Aylık"
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Ödemeniz Alındı</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.tenantName}</strong>, ödemeniz başarıyla işlendi.</p>
+    ${statusBanner("success")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Ödemeniz Alındı</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.tenantName}</strong>, ödemeniz başarıyla işlendi.</p>
     <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Plan", params.planName)}
       ${infoRow("Dönem", periodLabel)}
@@ -329,8 +351,9 @@ export async function sendInvoiceEmail(params: {
 }): Promise<EmailResult> {
   const periodLabel = params.billingPeriod === "YEARLY" ? "Yıllık" : "Aylık"
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Faturanız Hazır</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.tenantName}</strong>, faturanız oluşturulmuştur.</p>
+    ${statusBanner("info")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Faturanız Hazır</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.tenantName}</strong>, faturanız oluşturulmuştur.</p>
     <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Fatura No", params.invoiceNumber)}
       ${infoRow("Plan", `${params.planName} (${periodLabel})`)}
@@ -354,7 +377,8 @@ export async function sendBusinessNewAppointment(params: {
   const time = formatTime(params.startTime)
 
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 16px;">Yeni Randevu</h1>
+    ${statusBanner("info")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 16px;text-align:center;">Yeni Randevu</h1>
     <div style="background:#f5f3ef;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Müşteri", params.customerName)}
       ${infoRow("Telefon", params.customerPhone)}
@@ -375,13 +399,14 @@ export async function sendWelcomeEmail(params: {
   tenantId: string; tenantEmail: string; tenantName: string; companyName: string
 }): Promise<EmailResult> {
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Randevya'ya Hoş Geldiniz!</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.tenantName}</strong>, <strong>${params.companyName}</strong> işletmeniz başarıyla oluşturuldu.</p>
+    ${statusBanner("success")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Randevya'ya Hoş Geldiniz!</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.tenantName}</strong>, <strong>${params.companyName}</strong> işletmeniz başarıyla oluşturuldu.</p>
     <div style="background:#f0f7ff;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("Deneme Süresi", "14 gün (ücretsiz)")}
       ${infoRow("Plan", "Başlangıç")}
     </div>
-    <p style="color:#555;font-size:13px;margin:0 0 16px;">14 günlük ücretsiz deneme süreniz başlamıştır. Bu sürede tüm temel özellikleri kullanabilirsiniz.</p>
+    <p style="color:#555;font-size:13px;margin:0 0 16px;text-align:center;">14 günlük ücretsiz deneme süreniz başlamıştır. Bu sürede tüm temel özellikleri kullanabilirsiniz.</p>
     ${ctaButton("Panele Git", `${process.env.NEXTAUTH_URL}/panel`, "#2a5cff")}`
 
   const result = await sendMail(params.tenantEmail, `Randevya'ya hoş geldiniz — ${params.companyName}`, baseTemplate(content))
@@ -395,12 +420,13 @@ export async function sendSubscriptionExpiredEmail(params: {
   tenantId: string; tenantEmail: string; tenantName: string; planName: string
 }): Promise<EmailResult> {
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Aboneliğiniz Sona Erdi</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Merhaba <strong>${params.tenantName}</strong>, <strong>${params.planName}</strong> aboneliğinizin süresi dolmuştur.</p>
+    ${statusBanner("warning")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Aboneliğiniz Sona Erdi</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Merhaba <strong>${params.tenantName}</strong>, <strong>${params.planName}</strong> aboneliğinizin süresi dolmuştur.</p>
     <div style="background:#fff0ee;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
-      <p style="margin:0;color:#d32f2f;font-size:13px;">Panel erişiminiz kısıtlanmıştır. Devam etmek için lütfen yeni bir paket satın alın.</p>
+      <p style="margin:0;color:#d32f2f;font-size:13px;text-align:center;">Panel erişiminiz kısıtlanmıştır. Devam etmek için lütfen yeni bir paket satın alın.</p>
     </div>
-    <p style="color:#555;font-size:13px;margin:0 0 16px;">Verileriniz güvende tutulmaktadır. Yeni paket aldığınızda kaldığınız yerden devam edebilirsiniz.</p>
+    <p style="color:#555;font-size:13px;margin:0 0 16px;text-align:center;">Verileriniz güvende tutulmaktadır. Yeni paket aldığınızda kaldığınız yerden devam edebilirsiniz.</p>
     ${ctaButton("Paket Satın Al", `${process.env.NEXTAUTH_URL}/panel/ayarlar`, "#2a5cff")}`
 
   const result = await sendMail(params.tenantEmail, "Aboneliğiniz sona erdi — Randevya", baseTemplate(content))
@@ -419,7 +445,8 @@ export async function sendAdminNewPurchaseNotify(params: {
   const periodLabel = params.billingPeriod === "YEARLY" ? "Yıllık" : "Aylık"
 
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 16px;">Yeni Paket Satın Alındı</h1>
+    ${statusBanner("success")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 16px;text-align:center;">Yeni Paket Satın Alındı</h1>
     <div style="background:#f0fdf4;border-radius:12px;padding:18px 22px;margin-bottom:20px;">
       ${infoRow("İşletme", params.tenantName)}
       ${infoRow("E-posta", params.tenantEmail)}
@@ -441,11 +468,12 @@ export async function sendPasswordResetEmail(params: {
   email: string; resetUrl: string
 }): Promise<EmailResult> {
   const content = `
-    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;">Şifre Sıfırlama</h1>
-    <p style="color:#555;font-size:14px;margin:0 0 24px;">Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.</p>
-    <p style="color:#777;font-size:12px;margin:0 0 8px;">Bu linkin geçerlilik süresi 1 saattir.</p>
+    ${statusBanner("info")}
+    <h1 style="font-size:20px;font-weight:700;color:#0d0d0d;margin:0 0 8px;text-align:center;">Şifre Sıfırlama</h1>
+    <p style="color:#555;font-size:14px;margin:0 0 24px;text-align:center;">Şifrenizi sıfırlamak için aşağıdaki butona tıklayın.</p>
+    <p style="color:#777;font-size:12px;margin:0 0 8px;text-align:center;">Bu linkin geçerlilik süresi 1 saattir.</p>
     ${ctaButton("Şifremi Sıfırla", params.resetUrl, "#2a5cff")}
-    <p style="color:#999;font-size:11px;margin-top:24px;">Bu isteği siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>`
+    <p style="color:#999;font-size:11px;margin-top:24px;text-align:center;">Bu isteği siz yapmadıysanız bu e-postayı görmezden gelebilirsiniz.</p>`
 
   return sendMail(params.email, "Şifre sıfırlama — Randevya", baseTemplate(content))
 }
