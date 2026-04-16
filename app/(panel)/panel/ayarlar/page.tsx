@@ -490,10 +490,24 @@ type SubscriptionHistory = {
 const KDV_RATE = 0.20
 const YEARLY_MULTIPLIER = 9
 
+type DbPlan = {
+  id: string
+  name: string
+  price_monthly: number
+  max_staff: number
+  max_services: number
+  whatsapp_enabled: boolean
+  custom_domain: boolean
+  waitlist_enabled: boolean
+  analytics: boolean
+  priority_support: boolean
+}
+
 function SubscriptionTab() {
   const router = useRouter()
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly")
-  const [currentPlan, setCurrentPlan] = useState("giris")
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null)
+  const [dbPlans, setDbPlans] = useState<DbPlan[]>([])
   const [confirmPlan, setConfirmPlan] = useState<string | null>(null)
   const [paymentStep, setPaymentStep] = useState<"confirm" | "billing" | "iframe" | null>(null)
 
@@ -558,7 +572,20 @@ function SubscriptionTab() {
     } catch { /* ignore */ }
   }, [])
 
-  useEffect(() => { fetchAddresses(); fetchHistory(); fetchActiveSub() }, [fetchAddresses, fetchHistory, fetchActiveSub])
+  const fetchPlans = useCallback(async () => {
+    try {
+      const res = await fetch("/api/panel/plans")
+      const data = await res.json()
+      if (data.success) {
+        setDbPlans(data.data.plans)
+        setCurrentPlan(data.data.current_plan_id)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  useEffect(() => {
+    fetchAddresses(); fetchHistory(); fetchActiveSub(); fetchPlans()
+  }, [fetchAddresses, fetchHistory, fetchActiveSub, fetchPlans])
 
   const tick = (
     <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -571,33 +598,48 @@ function SubscriptionTab() {
     </svg>
   )
 
-  const plans = [
-    {
-      id: "deneme", name: "Deneme", desc: "Giriş paketini 14 gün ücretsiz deneyin",
-      netMonthly: 0, isFree: true,
-      features: [{ text: "Giriş paketi özellikleri", has: true }, { text: "14 gün süre limiti", has: true }],
-    },
-    {
-      id: "giris", name: "Giriş", desc: "Küçük işletmeler için temel paket",
-      netMonthly: 300, isFree: false,
-      features: [
-        { text: "5 personel", has: true }, { text: "Sınırsız hizmet", has: true },
-        { text: "E-posta bildirimi", has: true }, { text: "E-posta destek", has: true },
-        { text: "7/24 destek", has: true }, { text: "Basit analitik rapor", has: true },
-        { text: "WhatsApp bildirim", has: false }, { text: "Özel alan adı", has: false },
-      ],
-    },
-    {
-      id: "profesyonel", name: "Profesyonel", desc: "Büyüyen işletmeler için gelişmiş özellikler",
-      netMonthly: 600, isFree: false, highlighted: true,
-      features: [
-        { text: "Sınırsız personel", has: true }, { text: "Sınırsız hizmet", has: true },
-        { text: "WhatsApp bildirim", has: true }, { text: "Özel alan adı", has: true },
-        { text: "7/24 öncelikli destek", has: true }, { text: "WhatsApp destek", has: true },
-        { text: "Tam analitik & rapor", has: true }, { text: "Webhook & API", has: true },
-      ],
-    },
-  ]
+  // DB'den gelen planları kart formuna dönüştür; en pahalı plan "Önerilen" olarak
+  // işaretlenir, ücretsiz planlar ise "Deneme" kartı olarak gösterilir.
+  type PlanCard = {
+    id: string
+    name: string
+    desc: string
+    netMonthly: number
+    isFree: boolean
+    highlighted?: boolean
+    features: { text: string; has: boolean }[]
+  }
+
+  const plans: PlanCard[] = dbPlans.map((p, i, arr) => {
+    const paid = arr.filter((x) => x.price_monthly > 0)
+    const mostExpensive = paid[paid.length - 1]
+    const isHighlighted = mostExpensive?.id === p.id
+    const isFree = p.price_monthly === 0
+    return {
+      id: p.id,
+      name: p.name,
+      desc: isFree
+        ? "Paketi 14 gün ücretsiz deneyin"
+        : isHighlighted
+          ? "Büyüyen işletmeler için gelişmiş paket"
+          : "Küçük işletmeler için temel paket",
+      netMonthly: Number(p.price_monthly),
+      isFree,
+      highlighted: isHighlighted,
+      features: isFree
+        ? [{ text: "Tüm temel özellikler", has: true }, { text: "14 gün süre limiti", has: true }]
+        : [
+            { text: p.max_staff >= 999 ? "Sınırsız personel" : `${p.max_staff} personele kadar`, has: true },
+            { text: p.max_services >= 999 ? "Sınırsız hizmet" : `${p.max_services} hizmete kadar`, has: true },
+            { text: "E-posta bildirimleri", has: true },
+            { text: "WhatsApp bildirim", has: p.whatsapp_enabled },
+            { text: "Özel alan adı", has: p.custom_domain },
+            { text: "Bekleme listesi", has: p.waitlist_enabled },
+            { text: "Analitik & rapor", has: p.analytics },
+            { text: "Öncelikli destek", has: p.priority_support },
+          ],
+    }
+  })
 
   const getPricing = (netMonthly: number, period: "monthly" | "yearly") => {
     const net = period === "yearly" ? netMonthly * YEARLY_MULTIPLIER : netMonthly
