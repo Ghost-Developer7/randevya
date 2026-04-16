@@ -51,7 +51,7 @@ export default function BookingStepper() {
     customer_phone: "",
     customer_email: "",
     notes: "",
-    payment_method: null,
+    payment_method: "venue", // Online ödeme şimdilik devre dışı — yerinde öde varsayılan
   })
 
   const [services, setServices] = useState<Service[]>([])
@@ -161,46 +161,58 @@ export default function BookingStepper() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Step indicator */}
-      <div className="flex items-center gap-0.5 mb-8 overflow-x-auto pb-2">
-        {steps.map((label, i) => {
-          const stepNum = i + 1
-          const isActive = state.step === stepNum
-          const isDone = state.step > stepNum
+      {/* Step indicator — mobilde aktif adım etiketi büyük, diğerleri sadece nokta */}
+      <div className="mb-6 sm:mb-8">
+        {/* Mobile: "Adım X/Y — Başlık" */}
+        <div className="flex items-center justify-between mb-2 sm:hidden">
+          <span className="text-xs font-semibold text-zinc-500">
+            Adım {state.step} / {steps.length}
+          </span>
+          <span className="text-sm font-semibold text-zinc-900">
+            {steps[state.step - 1]}
+          </span>
+        </div>
+        {/* Progress dots / line */}
+        <div className="flex items-center gap-0.5 overflow-x-auto pb-1">
+          {steps.map((label, i) => {
+            const stepNum = i + 1
+            const isActive = state.step === stepNum
+            const isDone = state.step > stepNum
 
-          return (
-            <div key={label} className="flex items-center">
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={`
-                    w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0
-                    ${isActive ? "bg-[var(--color-primary)] text-white" : ""}
-                    ${isDone ? "bg-emerald-500 text-white" : ""}
-                    ${!isActive && !isDone ? "bg-zinc-200 text-zinc-500" : ""}
-                  `}
-                >
-                  {isDone ? (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                  ) : (
-                    stepNum
-                  )}
+            return (
+              <div key={label} className="flex items-center">
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className={`
+                      w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-bold shrink-0
+                      ${isActive ? "bg-[var(--color-primary)] text-white" : ""}
+                      ${isDone ? "bg-emerald-500 text-white" : ""}
+                      ${!isActive && !isDone ? "bg-zinc-200 text-zinc-500" : ""}
+                    `}
+                  >
+                    {isDone ? (
+                      <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      stepNum
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs whitespace-nowrap hidden sm:block ${
+                      isActive ? "text-zinc-900 font-medium" : "text-zinc-400"
+                    }`}
+                  >
+                    {label}
+                  </span>
                 </div>
-                <span
-                  className={`text-xs whitespace-nowrap hidden sm:block ${
-                    isActive ? "text-zinc-900 font-medium" : "text-zinc-400"
-                  }`}
-                >
-                  {label}
-                </span>
+                {i < steps.length - 1 && (
+                  <div className={`w-3 sm:w-8 h-px mx-0.5 ${isDone ? "bg-emerald-500" : "bg-zinc-200"}`} />
+                )}
               </div>
-              {i < steps.length - 1 && (
-                <div className={`w-4 sm:w-8 h-px mx-0.5 ${isDone ? "bg-emerald-500" : "bg-zinc-200"}`} />
-              )}
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
       {error && (
@@ -476,28 +488,26 @@ export default function BookingStepper() {
               </div>
             </button>
 
-            <button
-              onClick={() => setState((s) => ({ ...s, payment_method: "online" }))}
-              className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                state.payment_method === "online"
-                  ? "border-[var(--color-primary)] bg-blue-50"
-                  : "border-zinc-200 hover:border-zinc-300"
-              }`}
+            {/* Online ödeme — şimdilik devre dışı, sadece görünüyor */}
+            <div
+              aria-disabled="true"
+              className="w-full text-left p-4 rounded-xl border-2 border-zinc-200 bg-zinc-50/60 opacity-60 cursor-not-allowed"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                  state.payment_method === "online" ? "bg-[var(--color-primary)] text-white" : "bg-zinc-100 text-zinc-400"
-                }`}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-zinc-100 text-zinc-400 shrink-0">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                 </div>
-                <div>
-                  <p className="font-medium text-zinc-900 text-sm">Online Ode</p>
-                  <p className="text-xs text-zinc-500">Şimdi güvenle ödeyin (onay sonrası tahsil edilir)</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium text-zinc-700 text-sm">Online Öde</p>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">Yakında</span>
+                  </div>
+                  <p className="text-xs text-zinc-500 mt-0.5">Kartla güvenli ödeme — yakında hizmetinizde.</p>
                 </div>
               </div>
-            </button>
+            </div>
           </div>
 
           {/* Turnstile doğrulama */}

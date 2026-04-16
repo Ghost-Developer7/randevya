@@ -89,33 +89,33 @@ export default async function PublicLayout({
     >
       {/* Top bar */}
       <header className="bg-white border-b border-zinc-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <a href="/" className="flex items-center gap-3 min-w-0">
             {tenant.logo_url ? (
               <img
                 src={tenant.logo_url}
                 alt={tenant.company_name}
-                className="w-10 h-10 rounded-xl object-cover"
+                className="w-10 h-10 rounded-xl object-cover shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-lg">
                   {tenant.company_name?.charAt(0) || "R"}
                 </span>
               </div>
             )}
-            <div>
-              <h1 className="text-lg font-bold text-zinc-900">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-zinc-900 truncate">
                 {tenant.company_name}
               </h1>
               {theme.tagline && (
-                <p className="text-xs text-zinc-500">{theme.tagline}</p>
+                <p className="text-xs text-zinc-500 truncate">{theme.tagline}</p>
               )}
             </div>
-          </div>
+          </a>
           <a
             href="/randevu"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity shrink-0 whitespace-nowrap"
           >
             Randevu Al
           </a>

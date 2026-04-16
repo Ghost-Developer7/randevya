@@ -84,29 +84,29 @@ export default async function TenantHome({ tenantId }: { tenantId: string }) {
     >
       {/* Header */}
       <header className="bg-white border-b border-zinc-200">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             {tenant.logo_url ? (
               <img
                 src={tenant.logo_url}
                 alt={tenant.company_name}
-                className="w-10 h-10 rounded-xl object-cover"
+                className="w-10 h-10 rounded-xl object-cover shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)] flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-lg">
                   {tenant.company_name?.charAt(0) || "R"}
                 </span>
               </div>
             )}
-            <div>
-              <h1 className="text-lg font-bold text-zinc-900">{tenant.company_name}</h1>
-              {theme.tagline && <p className="text-xs text-zinc-500">{theme.tagline}</p>}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold text-zinc-900 truncate">{tenant.company_name}</h1>
+              {theme.tagline && <p className="text-xs text-zinc-500 truncate">{theme.tagline}</p>}
             </div>
           </div>
           <Link
             href="/randevu"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity"
+            className="inline-flex items-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity shrink-0 whitespace-nowrap"
           >
             Randevu Al
           </Link>
@@ -114,22 +114,22 @@ export default async function TenantHome({ tenantId }: { tenantId: string }) {
       </header>
 
       {/* Hero */}
-      <section className="relative bg-gradient-to-b from-white to-zinc-50 py-16 sm:py-24">
+      <section className="relative bg-gradient-to-b from-white to-zinc-50 py-12 sm:py-24">
         {theme.cover_image_url && (
           <div className="absolute inset-0 overflow-hidden">
             <img src={theme.cover_image_url} alt="" className="w-full h-full object-cover opacity-10" />
           </div>
         )}
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900">
+          <h2 className="text-2xl sm:text-4xl font-bold text-zinc-900 break-words">
             {theme.tagline || `${tenant.company_name}'a Hoş Geldiniz`}
           </h2>
-          <p className="mt-4 text-lg text-zinc-600">
+          <p className="mt-3 sm:mt-4 text-base sm:text-lg text-zinc-600">
             Hizmetlerimizi inceleyin ve hemen online randevu alın.
           </p>
           <Link
             href="/randevu"
-            className="mt-8 inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity shadow-lg"
+            className="mt-6 sm:mt-8 inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 text-sm sm:text-base font-semibold text-white bg-[var(--color-primary)] rounded-xl hover:opacity-90 transition-opacity shadow-lg"
           >
             Randevu Al
             <svg className="ml-2 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -141,9 +141,9 @@ export default async function TenantHome({ tenantId }: { tenantId: string }) {
 
       {/* Services */}
       {services.length > 0 && (
-        <section className="py-16">
+        <section className="py-12 sm:py-16">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h3 className="text-2xl font-bold text-zinc-900 mb-8">Hizmetlerimiz</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-6 sm:mb-8">Hizmetlerimiz</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {services.map((service) => (
                 <div
@@ -169,9 +169,9 @@ export default async function TenantHome({ tenantId }: { tenantId: string }) {
 
       {/* Staff */}
       {staff.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-12 sm:py-16 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h3 className="text-2xl font-bold text-zinc-900 mb-8">Ekibimiz</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-zinc-900 mb-6 sm:mb-8">Ekibimiz</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
               {staff.map((member) => (
                 <div key={member.id} className="text-center">

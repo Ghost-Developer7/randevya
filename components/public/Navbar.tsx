@@ -31,17 +31,18 @@ export default function Navbar() {
             {/* Giriş Yap */}
             <Link
               href="/panel/giris"
-              className="text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-colors"
+              className="text-xs sm:text-sm font-medium text-zinc-700 hover:text-zinc-900 transition-colors"
             >
               Giriş Yap
             </Link>
 
-            {/* İşletme Kaydı */}
+            {/* İşletme Kaydı — mobilde kısaltma */}
             <Link
               href="/panel/kayit"
-              className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-sm font-medium text-white bg-[#2a5cff] rounded-xl hover:opacity-90 transition-opacity"
+              className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-[#2a5cff] rounded-xl hover:opacity-90 transition-opacity whitespace-nowrap"
             >
-              İşletmemi Ekle
+              <span className="hidden sm:inline">İşletmemi Ekle</span>
+              <span className="sm:hidden">Kayıt Ol</span>
             </Link>
           </div>
         </div>
