@@ -55,7 +55,19 @@
       "Bash(ls -la /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(panel\\\\\\)/panel/)",
       "Bash(ls /c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\\\\\(admin\\\\\\)/admin/tenants/)",
       "Bash(curl -s http://localhost:3003/api/services -H \"x-tenant-id: slug:mehmet\")",
-      "Bash(curl -s http://localhost:3003/api/services -H \"Host: mehmet.randevya.com\")"
+      "Bash(curl -s http://localhost:3003/api/services -H \"Host: mehmet.randevya.com\")",
+      "Bash(nslookup mehmet.randevya.com)",
+      "Bash(nslookup mehmet.randevya.com 8.8.8.8)",
+      "Bash(ls \"/c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)\")",
+      "Bash(ls \"/c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)/randevularim\")",
+      "Bash(ls \"/c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(public\\)\")",
+      "Bash(ls \"/c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(public\\)/randevu\")",
+      "Bash(ls \"/c/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(admin\\)/admin/tenants\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm i:*)",
+      "Bash(npm ls:*)"
     ]
   }
 }
