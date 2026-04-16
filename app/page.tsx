@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { headers } from "next/headers"
 import type { Metadata } from "next"
 import Logo from "@/components/ui/Logo"
@@ -507,8 +508,15 @@ export default async function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="mt-12 pt-8 border-t border-zinc-800 text-center text-sm">
-            &copy; 2026 Randevya. Tüm hakları saklıdır.
+          <div className="mt-12 pt-8 border-t border-zinc-800 flex flex-col items-center gap-4 text-sm">
+            <Image
+              src="/paytr-logo.png"
+              alt="PayTR güvenli ödeme"
+              width={120}
+              height={20}
+              className="opacity-70"
+            />
+            <span>&copy; 2026 Randevya. Tüm hakları saklıdır.</span>
           </div>
         </div>
       </footer>
