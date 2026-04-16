@@ -482,8 +482,8 @@ export default function BookingStepper() {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-zinc-900 text-sm">Yerinde Ode</p>
-                  <p className="text-xs text-zinc-500">Randevuya gittiğinizde ödemeni yapın</p>
+                  <p className="font-medium text-zinc-900 text-sm">Yerinde Öde</p>
+                  <p className="text-xs text-zinc-500">Randevuya gittiğinizde ödemenizi yapın</p>
                 </div>
               </div>
             </button>

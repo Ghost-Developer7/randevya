@@ -67,7 +67,7 @@ const features = [
       </svg>
     ),
     title: "Esnek Ödeme",
-    desc: "İsterseniz online ödeyin, isterseniz randevuya gittiğinizde ödemeni yapın. Seçim sizin.",
+    desc: "İsterseniz online ödeyin, isterseniz randevuya gittiğinizde ödemenizi yapın. Seçim sizin.",
   },
   {
     icon: (
@@ -144,7 +144,7 @@ export default async function HomePage() {
 
             {/* Subtitle */}
             <p className="animate-fade-in-up-delay-1 mt-7 text-base sm:text-lg text-zinc-500 max-w-xl mx-auto leading-relaxed font-light">
-              İşletmenizi yönetin, müşterileriniz sizi bulsun.
+              İşletmenizi yönetin, müşterileriniz sizi bulsun.{" "}
               <br className="hidden sm:block" />
               Tek platform, sıfır karmaşa.
             </p>
