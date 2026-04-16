@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions, type AdminRole } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { logError } from "@/lib/logger"
-import { redis, tenantCacheKey, TENANT_CACHE_TTL } from "@/lib/redis"
+import { resolveTenantByRawId } from "@/lib/tenant"
 import type { ApiSuccess, ApiError } from "@/types"
 
 // ─── Response builder'lar ─────────────────────────────────────────────────────
@@ -74,42 +74,7 @@ export function withErrorHandler<T extends AnyHandler>(fn: T, label: string): T 
 export async function getTenantFromRequest(req: NextRequest) {
   const raw = req.headers.get("x-tenant-id")
   if (!raw) return null
-
-  // ── Redis cache kontrolü ──────────────────────────────────────────────────
-  const cacheKey = tenantCacheKey(raw)
-  try {
-    const cached = await redis.get<string>(cacheKey)
-    if (cached) {
-      // Cache'te tenant ID var → direkt DB'den çek (ID ile hızlı)
-      return db.tenant.findUnique({ where: { id: cached, is_active: true } })
-    }
-  } catch {
-    // Redis hata verirse devam et
-  }
-
-  // ── DB'den çözümle ────────────────────────────────────────────────────────
-  let tenant = null
-
-  if (raw.startsWith("slug:")) {
-    const slug = raw.slice(5)
-    tenant = await db.tenant.findUnique({ where: { domain_slug: slug, is_active: true } })
-  } else if (raw.startsWith("custom:")) {
-    const domain = raw.slice(7)
-    tenant = await db.tenant.findFirst({ where: { custom_domain: domain, is_active: true } })
-  } else {
-    tenant = await db.tenant.findUnique({ where: { id: raw, is_active: true } })
-  }
-
-  // ── Sonucu Redis'e yaz (5 dk TTL) ────────────────────────────────────────
-  if (tenant) {
-    try {
-      await redis.set(cacheKey, tenant.id, { ex: TENANT_CACHE_TTL })
-    } catch {
-      // Cache yazma hata verirse sessizce devam et
-    }
-  }
-
-  return tenant
+  return resolveTenantByRawId(raw)
 }
 
 // ─── Auth guard'lar ───────────────────────────────────────────────────────────

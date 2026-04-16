@@ -1,18 +1,15 @@
 import { headers } from "next/headers"
 import type { Metadata } from "next"
+import { db } from "@/lib/db"
+import { resolveTenantByRawId } from "@/lib/tenant"
+import type { ThemeConfig } from "@/types"
 
 type TenantConfig = {
   id: string
   company_name: string
   logo_url: string | null
-  theme_config: {
-    primary_color?: string
-    secondary_color?: string
-    font?: string
-    border_radius?: string
-    tagline?: string
-  }
-  is_white_label?: boolean
+  theme_config: ThemeConfig
+  is_white_label: boolean
 }
 
 async function getTenantConfig(): Promise<TenantConfig | null> {
@@ -20,19 +17,20 @@ async function getTenantConfig(): Promise<TenantConfig | null> {
   const tenantId = headersList.get("x-tenant-id")
   if (!tenantId) return null
 
-  try {
-    const res = await fetch(
-      `${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.NEXTAUTH_URL || "http://localhost:3003")}/api/tenant`,
-      {
-        headers: { "x-tenant-id": tenantId },
-        next: { revalidate: 300 },
-      }
-    )
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.data
-  } catch {
-    return null
+  const tenant = await resolveTenantByRawId(tenantId)
+  if (!tenant) return null
+
+  const plan = await db.plan.findUnique({
+    where: { id: tenant.plan_id },
+    select: { custom_domain: true },
+  })
+
+  return {
+    id: tenant.id,
+    company_name: tenant.company_name,
+    logo_url: tenant.logo_url,
+    theme_config: JSON.parse(tenant.theme_config) as ThemeConfig,
+    is_white_label: plan?.custom_domain ?? false,
   }
 }
 

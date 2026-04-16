@@ -5,6 +5,7 @@ import Logo from "@/components/ui/Logo"
 import Navbar from "@/components/public/Navbar"
 import TenantHome from "@/components/public/TenantHome"
 import { db } from "@/lib/db"
+import { resolveTenantByRawId } from "@/lib/tenant"
 
 // ─── Dinamik metadata: tenant varsa tenant adı, yoksa Randevya ──────────────
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,27 +21,17 @@ export async function generateMetadata(): Promise<Metadata> {
     }
   }
 
-  try {
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3003"
-    const res = await fetch(`${baseUrl}/api/tenant`, {
-      headers: { "x-tenant-id": tenantId },
-      next: { revalidate: 300 },
-    })
-    if (res.ok) {
-      const data = await res.json()
-      const tenant = data.data
-      return {
+  const tenant = await resolveTenantByRawId(tenantId)
+  if (tenant) {
+    return {
+      title: `${tenant.company_name} - Online Randevu`,
+      description: `${tenant.company_name} online randevu sistemi. Hemen randevu alın.`,
+      openGraph: {
         title: `${tenant.company_name} - Online Randevu`,
-        description: `${tenant.company_name} online randevu sistemi. Hemen randevu alın.`,
-        openGraph: {
-          title: `${tenant.company_name} - Online Randevu`,
-          description: `${tenant.company_name} online randevu sistemi.`,
-          ...(tenant.logo_url ? { images: [tenant.logo_url] } : {}),
-        },
-      }
+        description: `${tenant.company_name} online randevu sistemi.`,
+        ...(tenant.logo_url ? { images: [tenant.logo_url] } : {}),
+      },
     }
-  } catch {
-    // Metadata alınamazsa default
   }
 
   return {

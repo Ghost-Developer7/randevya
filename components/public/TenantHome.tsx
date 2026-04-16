@@ -1,42 +1,49 @@
 import Link from "next/link"
+import { db } from "@/lib/db"
+import { resolveTenantByRawId } from "@/lib/tenant"
+import type { ThemeConfig } from "@/types"
 
 type TenantData = {
   company_name: string
   logo_url: string | null
-  theme_config: {
-    primary_color?: string
-    secondary_color?: string
-    font?: string
-    border_radius?: string
-    tagline?: string
-    cover_image_url?: string
-  }
-  is_white_label?: boolean
+  theme_config: ThemeConfig
+  is_white_label: boolean
 }
 
-type Service = { id: string; name: string; description?: string; duration_min: number }
-type Staff = { id: string; full_name: string; title?: string; photo_url?: string }
+type Service = { id: string; name: string; description?: string | null; duration_min: number }
+type Staff = { id: string; full_name: string; title?: string | null; photo_url?: string | null }
 
-async function fetchTenantData(tenantId: string) {
-  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : (process.env.NEXTAUTH_URL || "http://localhost:3003")
-  const hdrs = { "x-tenant-id": tenantId }
+async function fetchTenantData(tenantId: string): Promise<{
+  tenant: TenantData | null
+  services: Service[]
+  staff: Staff[]
+}> {
+  const tenant = await resolveTenantByRawId(tenantId)
+  if (!tenant) return { tenant: null, services: [], staff: [] }
 
-  const [tenantRes, servicesRes, staffRes] = await Promise.all([
-    fetch(`${baseUrl}/api/tenant`, { headers: hdrs, next: { revalidate: 300 } }),
-    fetch(`${baseUrl}/api/services`, { headers: hdrs, next: { revalidate: 300 } }),
-    fetch(`${baseUrl}/api/staff`, { headers: hdrs, next: { revalidate: 300 } }),
-  ])
-
-  const [tenant, services, staff] = await Promise.all([
-    tenantRes.ok ? tenantRes.json() : null,
-    servicesRes.ok ? servicesRes.json() : null,
-    staffRes.ok ? staffRes.json() : null,
+  const [plan, services, staff] = await Promise.all([
+    db.plan.findUnique({ where: { id: tenant.plan_id }, select: { custom_domain: true } }),
+    db.service.findMany({
+      where: { tenant_id: tenant.id, is_active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, description: true, duration_min: true },
+    }),
+    db.staff.findMany({
+      where: { tenant_id: tenant.id, is_active: true },
+      orderBy: { full_name: "asc" },
+      select: { id: true, full_name: true, title: true, photo_url: true },
+    }),
   ])
 
   return {
-    tenant: tenant?.data as TenantData | null,
-    services: (services?.data || []) as Service[],
-    staff: (staff?.data || []) as Staff[],
+    tenant: {
+      company_name: tenant.company_name,
+      logo_url: tenant.logo_url,
+      theme_config: JSON.parse(tenant.theme_config) as ThemeConfig,
+      is_white_label: plan?.custom_domain ?? false,
+    },
+    services,
+    staff,
   }
 }
 

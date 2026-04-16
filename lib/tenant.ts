@@ -1,4 +1,5 @@
 import { db } from "@/lib/db"
+import { redis, tenantCacheKey, TENANT_CACHE_TTL } from "@/lib/redis"
 import type { TenantPublic, ThemeConfig } from "@/types"
 
 // Prisma'dan gelen tenant'ı public tipe dönüştür
@@ -60,6 +61,42 @@ export async function getTenantById(id: string) {
   return db.tenant.findUnique({
     where: { id, is_active: true },
   })
+}
+
+// Proxy'den gelen ham x-tenant-id değerini (slug:xxx, custom:xxx, veya UUID)
+// tenant kaydına çözümler. Redis cache kullanır.
+// Hem getTenantFromRequest hem de server component'lerden paylaşılır.
+export async function resolveTenantByRawId(raw: string) {
+  const cacheKey = tenantCacheKey(raw)
+  try {
+    const cached = await redis.get<string>(cacheKey)
+    if (cached) {
+      return db.tenant.findUnique({ where: { id: cached, is_active: true } })
+    }
+  } catch {
+    // Redis hata verirse devam et
+  }
+
+  let tenant = null
+  if (raw.startsWith("slug:")) {
+    const slug = raw.slice(5)
+    tenant = await db.tenant.findUnique({ where: { domain_slug: slug, is_active: true } })
+  } else if (raw.startsWith("custom:")) {
+    const domain = raw.slice(7)
+    tenant = await db.tenant.findFirst({ where: { custom_domain: domain, is_active: true } })
+  } else {
+    tenant = await db.tenant.findUnique({ where: { id: raw, is_active: true } })
+  }
+
+  if (tenant) {
+    try {
+      await redis.set(cacheKey, tenant.id, { ex: TENANT_CACHE_TTL })
+    } catch {
+      // Cache yazma hata verirse sessizce devam et
+    }
+  }
+
+  return tenant
 }
 
 // Plan limitlerini kontrol et
