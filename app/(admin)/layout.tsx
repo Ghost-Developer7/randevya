@@ -32,7 +32,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (status === "loading") {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-50">
+      <div className="flex h-dvh items-center justify-center bg-zinc-50">
         <div className="w-8 h-8 rounded-full border-3 border-zinc-200 border-t-[#2a5cff] animate-spin" />
       </div>
     )
@@ -41,7 +41,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   if (!session) return null
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50">
+    <div className="flex h-dvh overflow-hidden bg-zinc-50">
       {/* Sidebar */}
       <aside className="w-60 bg-white border-r border-zinc-200 flex flex-col shrink-0">
         <div className="p-5 border-b border-zinc-100">

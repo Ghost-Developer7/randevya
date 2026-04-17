@@ -45,7 +45,7 @@ export default function Modal({ open, onClose, title, children, className = "" }
       <div
         className={`
           bg-white rounded-2xl shadow-2xl border border-zinc-200
-          w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto
+          w-full max-w-lg mx-2 sm:mx-4 max-h-[90dvh] overflow-y-auto
           animate-in fade-in zoom-in-95 duration-200
           ${className}
         `}

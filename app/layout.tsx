@@ -1,3 +1,4 @@
+import type { Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -11,6 +12,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#2a5cff",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +31,6 @@ export default function RootLayout({
     >
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#2a5cff" />
       </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

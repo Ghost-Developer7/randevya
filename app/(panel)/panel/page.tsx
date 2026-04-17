@@ -110,7 +110,7 @@ export default function DashboardPage() {
         <div className="p-5 rounded-2xl bg-white border border-zinc-200">
           <h2 className="text-sm font-bold text-zinc-900 mb-1">Haftalık Randevular</h2>
           <p className="text-xs text-zinc-400 mb-4">Son 7 gün</p>
-          <div style={{ width: "100%", height: 250 }}>
+          <div className="w-full h-48 sm:h-64">
             <ResponsiveContainer>
               <AreaChart data={data.daily_chart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -127,7 +127,7 @@ export default function DashboardPage() {
         <div className="p-5 rounded-2xl bg-white border border-zinc-200">
           <h2 className="text-sm font-bold text-zinc-900 mb-1">Yoğun Saatler</h2>
           <p className="text-xs text-zinc-400 mb-4">Saatlere göre dağılım</p>
-          <div style={{ width: "100%", height: 250 }}>
+          <div className="w-full h-48 sm:h-64">
             <ResponsiveContainer>
               <BarChart data={data.hourly_chart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -178,7 +178,7 @@ export default function DashboardPage() {
           {data.top_services.length === 0 ? (
             <p className="text-xs text-zinc-400 py-4">Henüz veri yok</p>
           ) : (
-            <div style={{ width: "100%", height: 200 }}>
+            <div className="w-full h-40 sm:h-52">
               <ResponsiveContainer>
                 <BarChart data={data.top_services} layout="vertical">
                   <XAxis type="number" tick={{ fontSize: 12 }} />

@@ -34,7 +34,11 @@ function timeAgo(iso: string): string {
   return `${days} gün önce`
 }
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick: () => void
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const { data: session } = useSession()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -64,13 +68,22 @@ export default function Header() {
   }, [])
 
   return (
-    <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-6">
-      <div>
-        <h2 className="text-sm font-medium text-zinc-900">
+    <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-4 sm:px-6 shrink-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-colors"
+          aria-label="Menüyü aç"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <h2 className="text-sm font-medium text-zinc-900 truncate">
           {session?.user?.name || "İşletme Paneli"}
         </h2>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Notification bell */}
         <div ref={ref} className="relative">
           <button
@@ -89,7 +102,7 @@ export default function Header() {
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl border border-zinc-200 shadow-2xl shadow-zinc-200/60 overflow-hidden z-50">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white rounded-2xl border border-zinc-200 shadow-2xl shadow-zinc-200/60 overflow-hidden z-50">
               <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
                 <h3 className="text-sm font-bold text-zinc-900">
                   Bildirimler
@@ -146,17 +159,17 @@ export default function Header() {
           )}
         </div>
 
-        <span className="text-sm text-zinc-500 hidden sm:block">
+        <span className="text-sm text-zinc-500 hidden md:block truncate max-w-[200px]">
           {session?.user?.email}
         </span>
         <button
           onClick={() => signOut({ callbackUrl: "/panel/giris" })}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-600 hover:text-red-600 rounded-lg hover:bg-zinc-100 transition-colors"
+          className="inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm text-zinc-600 hover:text-red-600 rounded-lg hover:bg-zinc-100 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Çıkış
+          <span className="hidden sm:inline">Çıkış</span>
         </button>
       </div>
     </header>

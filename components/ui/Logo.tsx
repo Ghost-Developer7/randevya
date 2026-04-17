@@ -1,8 +1,11 @@
+import Link from "next/link"
+
 interface LogoProps {
   size?: "sm" | "md" | "lg"
   showText?: boolean
   invertText?: boolean
   className?: string
+  href?: string
 }
 
 const sizes = {
@@ -11,11 +14,11 @@ const sizes = {
   lg: { box: "w-12 h-12", icon: "w-7 h-7", text: "text-2xl" },
 }
 
-export default function Logo({ size = "md", showText = true, invertText = false, className = "" }: LogoProps) {
+export default function Logo({ size = "md", showText = true, invertText = false, className = "", href = "/" }: LogoProps) {
   const s = sizes[size]
 
   return (
-    <a href="/" className={`flex items-center gap-2.5 ${className}`}>
+    <Link href={href} className={`flex items-center gap-2.5 ${className}`}>
       <div className={`${s.box} rounded-xl bg-gradient-to-br from-[#2a5cff] to-[#1a3fcc] flex items-center justify-center shadow-md shadow-blue-500/20`}>
         {/* Calendar + Clock combined icon */}
         <svg className={`${s.icon} text-white`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -36,6 +39,6 @@ export default function Logo({ size = "md", showText = true, invertText = false,
           Randevya
         </span>
       )}
-    </a>
+    </Link>
   )
 }

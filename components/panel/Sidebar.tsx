@@ -53,6 +53,15 @@ const navItems = [
     ),
   },
   {
+    label: "Abonelik",
+    href: "/panel/abonelik",
+    icon: (
+      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+      </svg>
+    ),
+  },
+  {
     label: "Ayarlar",
     href: "/panel/ayarlar",
     icon: (
@@ -64,7 +73,12 @@ const navItems = [
   },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  open: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname()
   const [unreadCount, setUnreadCount] = useState(0)
 
@@ -75,55 +89,89 @@ export default function Sidebar() {
       .catch(() => {})
   }, [])
 
+  // Close drawer when pathname changes (mobile navigation)
+  useEffect(() => {
+    onClose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
+
   return (
-    <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col h-full">
-      {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-zinc-200">
-        <Logo size="sm" />
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {open && (
+        <div
+          onClick={onClose}
+          className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/panel" && pathname.startsWith(item.href))
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          w-64 bg-white border-r border-zinc-200 flex flex-col h-full
+          transform transition-transform duration-200 ease-out
+          ${open ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0 lg:shrink-0
+        `}
+      >
+        {/* Logo + close button (mobile) */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-200">
+          <Logo size="sm" href="/panel" />
+          <button
+            onClick={onClose}
+            className="lg:hidden p-1 -mr-1 text-zinc-500 hover:text-zinc-900"
+            aria-label="Menüyü kapat"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`
-                flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
-                ${
-                  isActive
-                    ? "bg-[#2a5cff]/10 text-[#2a5cff]"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
-                }
-              `}
-            >
-              {item.icon}
-              <span className="flex-1">{item.label}</span>
-              {"hasBadge" in item && item.hasBadge && unreadCount > 0 ? (
-                <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              ) : null}
-            </Link>
-          )
-        })}
-      </nav>
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || (item.href !== "/panel" && pathname.startsWith(item.href))
 
-      {/* Bottom */}
-      <div className="px-3 py-4 border-t border-zinc-200">
-        <Link
-          href="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Ana Sayfa
-        </Link>
-      </div>
-    </aside>
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`
+                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors
+                  ${
+                    isActive
+                      ? "bg-[#2a5cff]/10 text-[#2a5cff]"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                  }
+                `}
+              >
+                {item.icon}
+                <span className="flex-1">{item.label}</span>
+                {"hasBadge" in item && item.hasBadge && unreadCount > 0 ? (
+                  <span className="w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                ) : null}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Bottom */}
+        <div className="px-3 py-4 border-t border-zinc-200">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Ana Sayfa
+          </Link>
+        </div>
+      </aside>
+    </>
   )
 }
