@@ -1,9 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import Navbar from "@/components/public/Navbar"
-import Logo from "@/components/ui/Logo"
+import Footer from "@/components/public/Footer"
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" })
@@ -169,13 +168,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Mini Footer */}
-      <footer className="bg-zinc-950 text-zinc-400 py-8 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          <Logo size="sm" invertText />
-          <p className="mt-3">&copy; 2026 Randevya. Tüm hakları saklıdır.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

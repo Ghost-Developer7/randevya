@@ -13,18 +13,18 @@ export default function Navbar() {
           <div className="flex items-center gap-3 sm:gap-6">
             {/* Nav links — desktop only */}
             <div className="hidden md:flex items-center gap-6">
-              <a href="#nasil-calisir" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
+              <Link href="/#nasil-calisir" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
                 Nasıl Çalışır?
-              </a>
-              <a href="#sektorler" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
+              </Link>
+              <Link href="/#sektorler" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
                 Sektörler
-              </a>
-              <a href="#fiyatlandirma" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
+              </Link>
+              <Link href="/#fiyatlandirma" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
                 Fiyatlandırma
-              </a>
-              <a href="/iletisim" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
+              </Link>
+              <Link href="/iletisim" className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors">
                 İletişim
-              </a>
+              </Link>
               <div className="h-5 w-px bg-zinc-200" />
             </div>
 
