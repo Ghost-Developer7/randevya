@@ -4,6 +4,7 @@ import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Logo from "@/components/ui/Logo"
+import Input from "@/components/ui/Input"
 
 function ResetForm() {
   const searchParams = useSearchParams()
@@ -75,29 +76,23 @@ function ResetForm() {
       <p className="text-sm text-zinc-500 text-center mb-6">Yeni şifrenizi girin.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-xs font-medium text-zinc-600 mb-1">Yeni Şifre</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="En az 8 karakter"
-            required
-            minLength={8}
-            className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff]"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-zinc-600 mb-1">Şifre Tekrar</label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Şifrenizi tekrar girin"
-            required
-            className="w-full px-3 py-2.5 text-sm rounded-xl border border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#2a5cff]"
-          />
-        </div>
+        <Input
+          label="Yeni Şifre"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="En az 8 karakter"
+          required
+          minLength={8}
+        />
+        <Input
+          label="Şifre Tekrar"
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          placeholder="Şifrenizi tekrar girin"
+          required
+        />
 
         {error && <p className="text-xs text-red-500 bg-red-50 p-2 rounded-lg">{error}</p>}
 
