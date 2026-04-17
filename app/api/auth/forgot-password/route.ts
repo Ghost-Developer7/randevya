@@ -13,7 +13,7 @@ async function postHandler(req: NextRequest) {
   if (!email) return err("E-posta adresi zorunlu")
 
   // Tenant veya admin kullanıcı var mı kontrol et (bilgi sızdırmadan)
-  const tenant = await db.tenant.findFirst({ where: { owner_email: email } })
+  const tenant = await db.tenant.findFirst({ where: { owner_email: email, is_active: true } })
   const admin = await db.adminUser.findFirst({ where: { email, is_active: true } })
 
   // Kullanıcı bulunamazsa bile başarılı dönüyoruz (email enumeration koruması)

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { ok, err, withErrorHandler } from "@/lib/api-helpers"
 import { db } from "@/lib/db"
+import { redis } from "@/lib/redis"
 import bcrypt from "bcryptjs"
 
 // POST /api/auth/reset-password — şifre sıfırlama (token + yeni şifre)
@@ -21,7 +22,7 @@ async function postHandler(req: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 10)
 
   // Tenant mı admin mi?
-  const tenant = await db.tenant.findFirst({ where: { owner_email: resetToken.email } })
+  const tenant = await db.tenant.findFirst({ where: { owner_email: resetToken.email, is_active: true } })
   const admin = await db.adminUser.findFirst({ where: { email: resetToken.email, is_active: true } })
 
   if (tenant) {
@@ -32,8 +33,20 @@ async function postHandler(req: NextRequest) {
     return err("Bu e-posta adresine ait hesap bulunamadı", 404)
   }
 
-  // Token'ı kullanıldı olarak işaretle
+  // Token'ı kullanıldı olarak işaretle + aynı email için kalan pending tokenleri da kapat
   await db.passwordResetToken.update({ where: { token }, data: { used: true } })
+  await db.passwordResetToken.updateMany({
+    where: { email: resetToken.email, used: false, token: { not: token } },
+    data: { used: true },
+  })
+
+  // Login rate-limit sayacını sıfırla — aksi halde kullanıcı eski yanlış denemeler yüzünden
+  // yeni şifreyle de 15 dk boyunca giriş yapamaz. Redis hatası reset'i başarısız saymasın.
+  try {
+    await redis.del(`rl:login:${resetToken.email}`)
+  } catch (e) {
+    console.error("[reset-password] rate-limit temizleme hatası:", e)
+  }
 
   return ok({ reset: true, message: "Şifreniz başarıyla güncellendi. Giriş yapabilirsiniz." })
 }
