@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts"
 
 type DashboardData = {
@@ -27,6 +27,20 @@ const STATUS_COLORS: Record<string, string> = {
 }
 const STATUS_LABELS: Record<string, string> = {
   confirmed: "Onaylandı", completed: "Tamamlandı", pending: "Bekliyor", cancelled: "İptal", no_show: "Gelmedi",
+}
+
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number }[]; label?: string }) {
+  if (!active || !payload?.length) return null
+  return (
+    <div className="bg-white rounded-xl border border-zinc-200 shadow-lg px-3 py-2 text-xs">
+      <p className="font-semibold text-zinc-700 mb-1">{label}</p>
+      {payload.map((p) => (
+        <p key={p.name} className="text-zinc-500">
+          {p.name}: <span className="font-bold text-zinc-900">{p.value}</span>
+        </p>
+      ))}
+    </div>
+  )
 }
 
 export default function DashboardPage() {
@@ -113,11 +127,11 @@ export default function DashboardPage() {
           <div className="w-full h-48 sm:h-64">
             <ResponsiveContainer>
               <AreaChart data={data.daily_chart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="#2a5cff" fill="#2a5cff" fillOpacity={0.1} strokeWidth={2} name="Randevu" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#e4e4e7', strokeWidth: 1 }} />
+                <Area type="monotone" dataKey="count" stroke="#2a5cff" fill="#2a5cff" fillOpacity={0.08} strokeWidth={2} name="Randevu" dot={false} activeDot={{ r: 4, fill: '#2a5cff' }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -129,11 +143,11 @@ export default function DashboardPage() {
           <p className="text-xs text-zinc-400 mb-4">Saatlere göre dağılım</p>
           <div className="w-full h-48 sm:h-64">
             <ResponsiveContainer>
-              <BarChart data={data.hourly_chart}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
+              <BarChart data={data.hourly_chart} barCategoryGap="35%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f4f4f5" vertical={false} />
+                <XAxis dataKey="hour" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(39,39,42,0.04)' }} />
                 <Bar dataKey="count" name="Randevu" radius={[4, 4, 0, 0]}>
                   {data.hourly_chart.map((entry) => (
                     <Cell key={entry.hour} fill={entry.count > maxHourly * 0.7 ? "#ef4444" : entry.count > maxHourly * 0.4 ? "#f59e0b" : "#22c55e"} />
@@ -181,9 +195,9 @@ export default function DashboardPage() {
             <div className="w-full h-40 sm:h-52">
               <ResponsiveContainer>
                 <BarChart data={data.top_services} layout="vertical">
-                  <XAxis type="number" tick={{ fontSize: 12 }} />
-                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
-                  <Tooltip />
+                  <XAxis type="number" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(39,39,42,0.04)' }} />
                   <Bar dataKey="count" fill="#2a5cff" radius={[0, 4, 4, 0]} name="Randevu" />
                 </BarChart>
               </ResponsiveContainer>

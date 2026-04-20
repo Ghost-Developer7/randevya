@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Card from "@/components/ui/Card"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
@@ -35,6 +35,9 @@ export default function SettingsPage() {
   const [sector, setSector] = useState("")
   const [address, setAddress] = useState("")
   const [description, setDescription] = useState("")
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Theme
   const [primaryColor, setPrimaryColor] = useState("#2a5cff")
@@ -70,6 +73,7 @@ export default function SettingsPage() {
           setOwnerEmail(data.data.owner_email || "")
           setCompanyName(data.data.company_name || "")
           setSector(data.data.sector || "")
+          setLogoUrl(data.data.logo_url || null)
         }
       })
       .finally(() => setProfileLoading(false))
@@ -119,6 +123,28 @@ export default function SettingsPage() {
 
   const [saveError, setSaveError] = useState("")
 
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/panel/settings/logo", { method: "POST", body: formData })
+      const data = await res.json()
+      if (data.success) {
+        setLogoUrl(data.data.logo_url)
+      } else {
+        setSaveError(data.error || "Logo yüklenemedi")
+      }
+    } catch {
+      setSaveError("Logo yüklenirken hata oluştu")
+    } finally {
+      setLogoUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
   const save = async () => {
     setSaved(false)
     setSaveError("")
@@ -127,6 +153,13 @@ export default function SettingsPage() {
         const res = await fetch("/api/panel/settings/profile", {
           method: "PATCH", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ owner_name: ownerName, owner_email: ownerEmail }),
+        })
+        const data = await res.json()
+        if (!data.success) { setSaveError(data.error); return }
+      } else if (tab === "isletme") {
+        const res = await fetch("/api/panel/settings/profile", {
+          method: "PATCH", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company_name: companyName, sector }),
         })
         const data = await res.json()
         if (!data.success) { setSaveError(data.error); return }
@@ -237,11 +270,29 @@ export default function SettingsPage() {
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1.5">Logo</label>
                   <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a5cff] to-[#6366f1] flex items-center justify-center text-white text-xl font-bold">
-                      {companyName.charAt(0)}
-                    </div>
+                    {logoUrl ? (
+                      <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-2xl object-cover border border-zinc-200" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a5cff] to-[#6366f1] flex items-center justify-center text-white text-xl font-bold">
+                        {companyName.charAt(0)}
+                      </div>
+                    )}
                     <div>
-                      <Button variant="outline" size="sm">Logo Yükle</Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="hidden"
+                        onChange={handleLogoChange}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        loading={logoUploading}
+                      >
+                        Logo Yükle
+                      </Button>
                       <p className="text-xs text-zinc-400 mt-1">PNG, JPG — Maks 4MB</p>
                     </div>
                   </div>

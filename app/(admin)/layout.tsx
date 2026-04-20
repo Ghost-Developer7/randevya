@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import SessionProvider from "@/components/panel/SessionProvider"
 import Logo from "@/components/ui/Logo"
@@ -15,13 +15,14 @@ const NAV_ITEMS = [
   { label: "Planlar", href: "/admin/plans", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },
   { label: "E-Posta", href: "/admin/email-ayarlari", icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
   { label: "Giriş Limitleri", href: "/admin/rate-limit", icon: "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" },
-  { label: "Destek", href: "/admin/support", icon: "M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" },
+  { label: "Destek", href: "/admin/support", icon: "M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
 ]
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const router = useRouter()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     if (status === "loading") return
@@ -29,6 +30,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       router.replace("/panel/giris")
     }
   }, [status, session, router])
+
+  // Route değişince mobile drawer'ı kapat
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
 
   if (status === "loading") {
     return (
@@ -40,13 +46,45 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   if (!session) return null
 
+  const activeLabel = NAV_ITEMS.find((i) =>
+    i.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(i.href)
+  )?.label ?? "Admin"
+
   return (
     <div className="flex h-dvh overflow-hidden bg-zinc-50">
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          className="lg:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-60 bg-white border-r border-zinc-200 flex flex-col shrink-0">
-        <div className="p-5 border-b border-zinc-100">
-          <Logo size="sm" />
-          <p className="text-[10px] text-zinc-400 mt-1 font-medium uppercase tracking-wider">Admin Panel</p>
+      <aside
+        className={`
+          fixed lg:static inset-y-0 left-0 z-40
+          w-60 bg-white border-r border-zinc-200 flex flex-col h-full shrink-0
+          transform transition-transform duration-200 ease-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          lg:translate-x-0
+        `}
+      >
+        <div className="p-5 border-b border-zinc-100 flex items-start justify-between">
+          <div>
+            <Logo size="sm" />
+            <p className="text-[10px] text-zinc-400 mt-1 font-medium uppercase tracking-wider">Admin Panel</p>
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-1 -mr-1 text-zinc-500 hover:text-zinc-900"
+            aria-label="Menüyü kapat"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
           {NAV_ITEMS.map((item) => {
@@ -82,14 +120,25 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-6 shrink-0">
-          <h2 className="text-sm font-semibold text-zinc-900">
-            {NAV_ITEMS.find((i) => i.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(i.href))?.label ?? "Admin"}
-          </h2>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-zinc-500">{session.user.email}</span>
+        <header className="h-14 bg-white border-b border-zinc-200 flex items-center justify-between px-4 sm:px-6 shrink-0 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 rounded-xl transition-colors"
+              aria-label="Menüyü aç"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h2 className="text-sm font-semibold text-zinc-900 truncate">
+              {activeLabel}
+            </h2>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <span className="text-xs text-zinc-500 hidden md:inline truncate max-w-[200px]">{session.user.email}</span>
             <button
               onClick={() => signOut({ callbackUrl: "/panel/giris" })}
               className="text-xs text-zinc-500 hover:text-red-600 transition-colors"
@@ -100,7 +149,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {children}
         </main>
       </div>

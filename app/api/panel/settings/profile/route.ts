@@ -15,6 +15,8 @@ async function patchHandler(req: NextRequest) {
   const body = await req.json().catch(() => null) as {
     owner_name?: string
     owner_email?: string
+    company_name?: string
+    sector?: string
     current_password?: string
     new_password?: string
   } | null
@@ -33,6 +35,15 @@ async function patchHandler(req: NextRequest) {
   if (body.owner_name !== undefined) {
     if (!body.owner_name.trim()) return err("owner_name boş olamaz")
     updateData.owner_name = body.owner_name.trim()
+  }
+
+  // İşletme adı ve sektör
+  if (body.company_name !== undefined) {
+    if (!body.company_name.trim()) return err("İşletme adı boş olamaz")
+    updateData.company_name = body.company_name.trim()
+  }
+  if (body.sector !== undefined) {
+    updateData.sector = body.sector
   }
 
   // Email güncelleme
@@ -88,7 +99,7 @@ async function getHandler() {
 
   const tenant = await db.tenant.findUnique({
     where: { id: session.user.tenant_id },
-    select: { owner_name: true, owner_email: true, company_name: true, sector: true },
+    select: { owner_name: true, owner_email: true, company_name: true, sector: true, logo_url: true },
   })
   if (!tenant) return err("Tenant bulunamadı", 404)
 
