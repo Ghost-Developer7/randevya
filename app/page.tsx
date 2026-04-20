@@ -111,7 +111,7 @@ const sectors = [
   { name: "Güzellik Salonu", icon: "💅" },
   { name: "Diş Kliniği", icon: "🦷" },
   { name: "Sağlık & Klinik", icon: "🏥" },
-  { name: "Fizyoterapi", icon: "💪" },
+  { name: "Fizyoterapi", icon: "🧘" },
   { name: "Veteriner", icon: "🐾" },
   { name: "Danışmanlık", icon: "📋" },
   { name: "Spor & Fitness", icon: "🏋️" },
@@ -161,8 +161,7 @@ export default async function HomePage() {
             {/* Subtitle */}
             <p className="animate-fade-in-up-delay-1 mt-7 text-base sm:text-lg text-zinc-500 max-w-2xl mx-auto leading-relaxed">
               Telefon trafiğine son verin.{" "}
-              <strong className="text-zinc-700 font-medium">Randevya</strong> ile işletmenize dakikalar içinde online randevu sistemi kurun —
-              otomatik bildirimler, kolay yönetim paneli, WhatsApp entegrasyonu.
+              <strong className="text-zinc-700 font-medium">Randevya</strong> ile işletmenize dakikalar içinde online randevu sistemi kurun. Otomatik bildirimler, kolay yönetim paneli ve WhatsApp entegrasyonu dahil.
             </p>
 
             {/* CTA Buttons */}
@@ -187,7 +186,7 @@ export default async function HomePage() {
             {/* Trust signals */}
             <div className="animate-fade-in-up-delay-3 mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-zinc-400">
               {[
-                "Kredi kartı gerekmez",
+                "14 gün ücretsiz deneme",
                 "5 dakikada kurulum",
                 "Teknik bilgi şart değil",
                 "Müşteriler için tamamen ücretsiz",
@@ -225,7 +224,7 @@ export default async function HomePage() {
             {[
               {
                 title: "Ücretsiz Kaydolun",
-                desc: "E-posta ve işletme adınızla 2 dakikada hesap oluşturun. Kredi kartı istenmez, taahhüt yok.",
+                desc: "E-posta ve işletme adınızla 2 dakikada hesap oluşturun. Taahhüt olmadan, hemen başlayın.",
                 gradient: "from-blue-500 to-blue-600",
                 bg: "bg-blue-50",
                 hoverBg: "hover:bg-blue-500",
@@ -253,7 +252,7 @@ export default async function HomePage() {
               },
               {
                 title: "Linkinizi Paylaşın",
-                desc: "Size özel randevu linkinizi Instagram, WhatsApp veya web sitenize ekleyin. Hazır.",
+                desc: "Size özel randevu linkinizi Instagram, WhatsApp veya web sitenize ekleyin. Müşterileriniz artık sizi arayarak randevu almak zorunda kalmaz.",
                 gradient: "from-amber-500 to-amber-600",
                 bg: "bg-amber-50",
                 hoverBg: "hover:bg-amber-500",
@@ -267,7 +266,7 @@ export default async function HomePage() {
               },
               {
                 title: "Randevuları Yönetin",
-                desc: "Gelen randevuları onaylayın, reddedip. Bildirimler otomatik gönderilir — siz sadece işinize odaklanın.",
+                desc: "Gelen randevuları tek tıkla onaylayabilir ya da reddedebilirsiniz. Tüm bildirimler otomatik olarak gönderilir; siz sadece işinize odaklanın.",
                 gradient: "from-emerald-500 to-emerald-600",
                 bg: "bg-emerald-50",
                 hoverBg: "hover:bg-emerald-500",
@@ -347,7 +346,7 @@ export default async function HomePage() {
               Her sektöre uygun randevu çözümü
             </h2>
             <p className="mt-3 text-lg text-zinc-500">
-              Kuaförden kliniğe, veterinerden danışmanlığa — Randevya sektörünüze göre çalışır.
+              Kuaförden kliniğe, veterinerden danışmanlığa; Randevya her sektör için çalışır.
             </p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
@@ -378,7 +377,7 @@ export default async function HomePage() {
           <div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-200">
               <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-              <span className="text-sm font-medium text-emerald-700">14 gün boyunca tüm özellikleri ücretsiz deneyin — kredi kartı gerekmez</span>
+              <span className="text-sm font-medium text-emerald-700">14 gün boyunca tüm özellikleri ücretsiz deneyin</span>
             </div>
           </div>
 
@@ -459,8 +458,8 @@ export default async function HomePage() {
               </div>
               <h3 className="text-xl font-bold mb-2">Hemen başlayın, 14 gün ücretsiz</h3>
               <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                Kayıt olmak 5 dakika sürer. Kredi kartı gerekmez, taahhüt yok.
-                Sistemi kurun, müşterilerinize linki gönderin — ilk randevu bugün gelebilir.
+                Kayıt olmak 5 dakika sürer, taahhüt yok.
+                Sistemi kurun, müşterilerinize linki gönderin. İlk randevu bugün gelebilir.
               </p>
               <Link
                 href="/panel/kayit"

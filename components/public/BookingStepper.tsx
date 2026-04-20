@@ -173,14 +173,14 @@ export default function BookingStepper() {
           </span>
         </div>
         {/* Progress dots / line */}
-        <div className="flex items-center gap-0.5 overflow-x-auto pb-1">
+        <div className="flex items-center gap-0.5 overflow-x-auto pb-1 flex-nowrap">
           {steps.map((label, i) => {
             const stepNum = i + 1
             const isActive = state.step === stepNum
             const isDone = state.step > stepNum
 
             return (
-              <div key={label} className="flex items-center">
+              <div key={label} className="flex items-center shrink-0">
                 <div className="flex items-center gap-1.5">
                   <div
                     className={`
@@ -207,7 +207,7 @@ export default function BookingStepper() {
                   </span>
                 </div>
                 {i < steps.length - 1 && (
-                  <div className={`w-3 sm:w-8 h-px mx-0.5 ${isDone ? "bg-emerald-500" : "bg-zinc-200"}`} />
+                  <div className={`w-3 sm:w-8 h-px mx-0.5 shrink-0 ${isDone ? "bg-emerald-500" : "bg-zinc-200"}`} />
                 )}
               </div>
             )
@@ -388,9 +388,11 @@ export default function BookingStepper() {
             <Input
               label="Telefon"
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder="05XX XXX XX XX"
               value={state.customer_phone}
-              onChange={(e) => setState((s) => ({ ...s, customer_phone: e.target.value }))}
+              onChange={(e) => setState((s) => ({ ...s, customer_phone: e.target.value.replace(/[^0-9+]/g, "") }))}
               required
             />
             <Input

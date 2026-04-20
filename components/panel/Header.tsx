@@ -107,7 +107,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white rounded-2xl border border-zinc-200 shadow-2xl shadow-zinc-200/60 overflow-hidden z-50">
+            <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[4.25rem] sm:top-auto sm:mt-2 sm:w-80 bg-white rounded-2xl border border-zinc-200 shadow-2xl shadow-zinc-200/60 overflow-hidden z-50">
               <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
                 <h3 className="text-sm font-bold text-zinc-900">
                   Bildirimler

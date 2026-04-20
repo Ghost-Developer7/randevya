@@ -121,7 +121,7 @@ export default function DashboardPage() {
       {/* Grafikler */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Haftalık */}
-        <div className="p-5 rounded-2xl bg-white border border-zinc-200">
+        <div className="p-5 rounded-2xl bg-white border border-zinc-200 min-w-0">
           <h2 className="text-sm font-bold text-zinc-900 mb-1">Haftalık Randevular</h2>
           <p className="text-xs text-zinc-400 mb-4">Son 7 gün</p>
           <div className="w-full h-48 sm:h-64">
@@ -138,7 +138,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Saatlik */}
-        <div className="p-5 rounded-2xl bg-white border border-zinc-200">
+        <div className="p-5 rounded-2xl bg-white border border-zinc-200 min-w-0">
           <h2 className="text-sm font-bold text-zinc-900 mb-1">Yoğun Saatler</h2>
           <p className="text-xs text-zinc-400 mb-4">Saatlere göre dağılım</p>
           <div className="w-full h-48 sm:h-64">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       {/* Durum + Hizmetler */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie */}
-        <div className="p-5 rounded-2xl bg-white border border-zinc-200">
+        <div className="p-5 rounded-2xl bg-white border border-zinc-200 min-w-0">
           <h2 className="text-sm font-bold text-zinc-900 mb-4">Randevu Durumları</h2>
           <div className="flex items-center gap-6">
             <div style={{ width: 140, height: 140 }}>
@@ -187,7 +187,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Top hizmetler */}
-        <div className="p-5 rounded-2xl bg-white border border-zinc-200">
+        <div className="p-5 rounded-2xl bg-white border border-zinc-200 min-w-0">
           <h2 className="text-sm font-bold text-zinc-900 mb-4">Popüler Hizmetler</h2>
           {data.top_services.length === 0 ? (
             <p className="text-xs text-zinc-400 py-4">Henüz veri yok</p>

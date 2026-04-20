@@ -37,16 +37,18 @@ export default function Modal({ open, onClose, title, children, className = "" }
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose()
       }}
     >
       <div
         className={`
-          bg-white rounded-2xl shadow-2xl border border-zinc-200
-          w-full max-w-lg mx-2 sm:mx-4 max-h-[90dvh] overflow-y-auto
-          animate-in fade-in zoom-in-95 duration-200
+          bg-white shadow-2xl border border-zinc-200
+          w-full max-w-lg sm:mx-4
+          rounded-t-3xl sm:rounded-2xl
+          max-h-[92dvh] sm:max-h-[90dvh] overflow-y-auto
+          animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200
           ${className}
         `}
       >

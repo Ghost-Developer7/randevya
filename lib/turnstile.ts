@@ -10,13 +10,15 @@ export async function verifyTurnstile(token: string, ip?: string | null): Promis
   }
 
   try {
-    const body: Record<string, string> = { secret, response: token }
-    if (ip) body.remoteip = ip
+    const params = new URLSearchParams()
+    params.append("secret", secret)
+    params.append("response", token)
+    if (ip) params.append("remoteip", ip)
 
     const res = await fetch(VERIFY_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
     })
 
     const data = await res.json()
