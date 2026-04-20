@@ -92,7 +92,8 @@ export async function requireTenantSession() {
 
     const tenant = tenantId
       ? await db.tenant.findFirst({ where: { id: tenantId, is_active: true }, select: { id: true } })
-      : await db.tenant.findFirst({ where: { is_active: true }, select: { id: true } })
+      : (await db.tenant.findFirst({ where: { owner_email: session.user.email, is_active: true }, select: { id: true } }))
+        ?? await db.tenant.findFirst({ where: { is_active: true }, select: { id: true } })
 
     if (tenant) {
       const adminAsSession = {

@@ -93,7 +93,11 @@
       "Bash(mv /tmp/ayarlar_new.tsx app/\\\\\\(panel\\\\\\)/panel/ayarlar/page.tsx)",
       "Bash(ls -la \"C:\\\\Users\\\\mehmet.kara\\\\Desktop\\\\m\\\\github\\\\randevya\\\\app\\\\\\(panel\\)\\\\panel\")",
       "Bash(ls -la \"C:\\\\Users\\\\mehmet.kara\\\\Desktop\\\\m\\\\github\\\\randevya\\\\app\\\\\\(admin\\)\\\\admin\")",
-      "Bash(grep -r \"DATABASE_URL\\\\|NEXTAUTH_SECRET\\\\|PAYTR_\" C:Usersmehmet.karaDesktopmgithubrandevya --include=*.md --include=*.txt)"
+      "Bash(grep -r \"DATABASE_URL\\\\|NEXTAUTH_SECRET\\\\|PAYTR_\" C:Usersmehmet.karaDesktopmgithubrandevya --include=*.md --include=*.txt)",
+      "Bash(ls -la \"C:\\\\Users\\\\mehmet.kara\\\\Desktop\\\\m\\\\github\\\\randevya/app/\\(panel\\)/panel/\")",
+      "Bash(find C:Usersmehmet.karaDesktopmgithubrandevya -path ./.next -prune -o -path ./node_modules -prune -o -type f -name *.ts -path */lib/* -print)",
+      "Bash(find C:Usersmehmet.karaDesktopmgithubrandevya -path ./.next -prune -o -path ./node_modules -prune -o -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\) -path */components/* -print)",
+      "Bash(xargs -I {} find {} -name \"*subscriptions*\" -type f)"
     ]
   }
 }

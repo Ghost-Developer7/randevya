@@ -84,6 +84,7 @@ export default function SubscriptionPage() {
 
   // Current subscription
   const [activeSub, setActiveSub] = useState<{ plan_name: string; billing_period: string; total_amount: number | null; ends_at: string } | null>(null)
+  const [subLoading, setSubLoading] = useState(true)
 
   const fetchAddresses = useCallback(async () => {
     try {
@@ -112,6 +113,7 @@ export default function SubscriptionPage() {
       const data = await res.json()
       if (data.success && data.data.active) setActiveSub(data.data.subscription)
     } catch { /* ignore */ }
+    setSubLoading(false)
   }, [])
 
   const fetchPlans = useCallback(async () => {
@@ -305,7 +307,7 @@ export default function SubscriptionPage() {
       </div>
 
       {/* Abonelik yoksa uyarı banner */}
-      {!activeSub && !historyLoading && (
+      {!activeSub && !currentPlan && !subLoading && !historyLoading && (
         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -329,7 +331,13 @@ export default function SubscriptionPage() {
           <div>
             <p className="text-xs text-blue-200 font-medium">Mevcut Planınız</p>
             <p className="text-xl font-bold mt-0.5">
-              {activeSub ? `${activeSub.plan_name} — ${Number(activeSub.total_amount ?? 0).toFixed(0)} ₺/${activeSub.billing_period === "YEARLY" ? "yıl" : "ay"}` : "Plan bilgisi yükleniyor..."}
+              {subLoading
+                ? "Plan bilgisi yükleniyor..."
+                : activeSub
+                  ? `${activeSub.plan_name} — ${Number(activeSub.total_amount ?? 0).toFixed(0)} ₺/${activeSub.billing_period === "YEARLY" ? "yıl" : "ay"}`
+                  : currentPlan
+                    ? (dbPlans.find((p) => p.id === currentPlan)?.name ?? "Mevcut Plan")
+                    : "Aktif abonelik yok"}
             </p>
             {activeSub && (
               <p className="text-xs text-blue-200 mt-1">
