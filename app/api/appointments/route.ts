@@ -85,7 +85,8 @@ async function postHandler(req: NextRequest) {
   })
 
   // Bildirimleri ve webhook'u arka planda gönder
-  notifyAppointmentCreated(appointment.id).catch(console.error)
+  const baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`
+  notifyAppointmentCreated(appointment.id, baseUrl).catch(console.error)
   fireWebhook(tenant.id, "appointment.created", {
     appointment_id: appointment.id,
     start_time: appointment.start_time.toISOString(),

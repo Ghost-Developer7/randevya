@@ -97,7 +97,14 @@
       "Bash(ls -la \"C:\\\\Users\\\\mehmet.kara\\\\Desktop\\\\m\\\\github\\\\randevya/app/\\(panel\\)/panel/\")",
       "Bash(find C:Usersmehmet.karaDesktopmgithubrandevya -path ./.next -prune -o -path ./node_modules -prune -o -type f -name *.ts -path */lib/* -print)",
       "Bash(find C:Usersmehmet.karaDesktopmgithubrandevya -path ./.next -prune -o -path ./node_modules -prune -o -type f \\\\\\(-name *.tsx -o -name *.ts \\\\\\) -path */components/* -print)",
-      "Bash(xargs -I {} find {} -name \"*subscriptions*\" -type f)"
+      "Bash(xargs -I {} find {} -name \"*subscriptions*\" -type f)",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(musteri\\)\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(public\\)/randevu\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(panel\\)\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(public\\)/randevu/[id]\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(panel\\)/panel\")",
+      "Bash(ls \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(panel\\)/panel/randevular\")",
+      "Bash(cat \"C:/Users/mehmet.kara/Desktop/m/github/randevya/app/\\(public\\)/randevu/[id]/page.tsx\")"
     ]
   }
 }

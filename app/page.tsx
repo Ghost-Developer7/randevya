@@ -57,7 +57,7 @@ const features = [
       </svg>
     ),
     title: "7/24 Online Randevu",
-    desc: "Çalışma saatlerinden bağımsız olarak müşterileriniz istediği zaman randevu alır. Kaçan her çağrı, kaçan bir gelirdir — artık olmayacak.",
+    desc: "Çalışma saatlerinden bağımsız olarak müşterileriniz istediği zaman randevu alır. Kaçan her çağrı, kaçan bir gelirdir; artık olmayacak.",
   },
   {
     icon: (
@@ -218,7 +218,7 @@ export default async function HomePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-zinc-900">
               5 dakikada hayata geçirin
             </h2>
-            <p className="mt-3 text-lg text-zinc-500">Teknik bilgi gerektirmez — kurulum adımları bu kadar basit</p>
+            <p className="mt-3 text-lg text-zinc-500">Teknik bilgi gerektirmez, kurulum adımları bu kadar basit.</p>
           </div>
           <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:flex lg:flex-row lg:gap-3">
             {[
@@ -440,7 +440,7 @@ export default async function HomePage() {
           </div>
 
           <p className="text-center text-xs text-zinc-400 mt-8">
-            Yıllık ödemede 12 ay kullanım, 9 ay ücret. Tüm paketlere fatura dahil.
+            Yıllık ödemede 12 ay kullanım, 9 ay ücret.
           </p>
         </div>
       </section>

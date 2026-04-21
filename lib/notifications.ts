@@ -43,7 +43,10 @@ async function getTenantPlan(tenantId: string) {
 
 // ─── Randevu oluşturuldu ─────────────────────────────────────────────────────
 
-export async function notifyAppointmentCreated(appointmentId: string): Promise<void> {
+export async function notifyAppointmentCreated(
+  appointmentId: string,
+  baseUrl?: string,  // ör: "https://takvim.drmehmet.com" — müşteri yönetim linki için
+): Promise<void> {
   const appointment = await db.appointment.findUnique({
     where: { id: appointmentId },
     include: {
@@ -69,9 +72,14 @@ export async function notifyAppointmentCreated(appointmentId: string): Promise<v
 
   const isWhiteLabel = tenant.plan.custom_domain
 
+  // Müşteri randevu yönetim URL'i (iptal / tarih değiştirme)
+  const manageUrl = baseUrl
+    ? `${baseUrl}/randevu/${appointment.id}?email=${encodeURIComponent(appointment.customer_email)}`
+    : undefined
+
   // Email + İşletme email + (plan izin veriyorsa) WhatsApp — paralel gönder
   const tasks: Promise<unknown>[] = [
-    sendAppointmentConfirm({ ...base, logoUrl: tenant.logo_url, isWhiteLabel }),
+    sendAppointmentConfirm({ ...base, logoUrl: tenant.logo_url, isWhiteLabel, manageUrl, appointmentId: appointment.id }),
     sendBusinessNewAppointment({
       ...base,
       businessEmail: tenant.owner_email,

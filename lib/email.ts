@@ -163,6 +163,7 @@ export async function sendAppointmentConfirm(params: {
   tenantId: string; companyName: string; logoUrl: string | null
   customerName: string; customerEmail: string; serviceName: string
   staffName: string; startTime: Date; isWhiteLabel?: boolean
+  manageUrl?: string; appointmentId?: string
 }): Promise<EmailResult> {
   const date = formatDate(params.startTime)
   const time = formatTime(params.startTime)
@@ -170,6 +171,23 @@ export async function sendAppointmentConfirm(params: {
   const logoHtml = params.logoUrl
     ? `<img src="${params.logoUrl}" alt="${params.companyName}" style="height:36px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto;">`
     : ""
+
+  // Müşteri yönetim butonları — mobile friendly stacked layout
+  const manageHtml = params.manageUrl ? `
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 20px;">
+        <tr>
+          <td align="center" style="padding-bottom:8px;">
+            <a href="${params.manageUrl}#reschedule" style="display:inline-block;background:#2a5cff;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;min-width:180px;text-align:center;" target="_blank">Tarihi Değiştir</a>
+          </td>
+        </tr>
+        <tr>
+          <td align="center">
+            <a href="${params.manageUrl}#cancel" style="display:inline-block;background:#fff;color:#dc2626;border:1px solid #fecaca;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:13px;min-width:180px;text-align:center;" target="_blank">Randevuyu İptal Et</a>
+          </td>
+        </tr>
+      </table>
+      <p style="color:#999;font-size:11px;margin:0 0 10px;text-align:center;">Randevunuzu buradan yönetebilirsiniz.</p>
+  ` : ""
 
   const html = `<!DOCTYPE html>
 <html lang="tr">
@@ -190,6 +208,7 @@ export async function sendAppointmentConfirm(params: {
         ${infoRow("Tarih", date)}
         ${infoRow("Saat", time)}
       </div>
+      ${manageHtml}
       <p style="color:#777;font-size:12px;margin:0;text-align:center;">Sorularınız için lütfen bizimle iletişime geçin.</p>
     </div>
     <div style="background:#f5f3ef;padding:18px 40px;text-align:center;">

@@ -23,11 +23,19 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-main);
+  overflow-x: clip;
 }
 
-/* Smooth scrolling */
+/* Smooth scrolling + prevent horizontal overflow everywhere */
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+/* Safety net: media elements should never push layout wider than viewport */
+img, svg, video, canvas, iframe {
+  max-width: 100%;
 }
 
 /* Hero animations */
