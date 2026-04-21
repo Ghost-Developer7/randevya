@@ -269,7 +269,7 @@ export default function SettingsPage() {
                 {/* Logo */}
                 <div>
                   <label className="block text-sm font-medium text-zinc-700 mb-1.5">Logo</label>
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center items-start gap-4">
                     {logoUrl ? (
                       <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-2xl object-cover border border-zinc-200" />
                     ) : (
@@ -311,38 +311,38 @@ export default function SettingsPage() {
               <h2 className="text-lg font-bold text-zinc-900 mb-1">Tema Ayarları</h2>
               <p className="text-xs text-zinc-400 mb-5">Müşterilerinizin gördüğü sayfanın görünümünü özelleştirin</p>
               <div className="space-y-5 max-w-lg">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">Ana Renk</label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <input
                         type="color"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="w-10 h-10 rounded-lg border border-zinc-200 cursor-pointer"
+                        className="w-10 h-10 shrink-0 rounded-lg border border-zinc-200 cursor-pointer appearance-none p-0 bg-transparent"
                       />
                       <input
                         type="text"
                         value={primaryColor}
                         onChange={(e) => setPrimaryColor(e.target.value)}
-                        className="flex-1 px-3 py-2 text-sm rounded-xl border border-zinc-300 font-mono"
+                        className="flex-1 min-w-0 px-3 py-2 text-base sm:text-sm rounded-xl border border-zinc-300 font-mono"
                       />
                     </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">İkincil Renk</label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <input
                         type="color"
                         value={secondaryColor}
                         onChange={(e) => setSecondaryColor(e.target.value)}
-                        className="w-10 h-10 rounded-lg border border-zinc-200 cursor-pointer"
+                        className="w-10 h-10 shrink-0 rounded-lg border border-zinc-200 cursor-pointer appearance-none p-0 bg-transparent"
                       />
                       <input
                         type="text"
                         value={secondaryColor}
                         onChange={(e) => setSecondaryColor(e.target.value)}
-                        className="flex-1 px-3 py-2 text-sm rounded-xl border border-zinc-300 font-mono"
+                        className="flex-1 min-w-0 px-3 py-2 text-base sm:text-sm rounded-xl border border-zinc-300 font-mono"
                       />
                     </div>
                   </div>
@@ -463,29 +463,29 @@ export default function SettingsPage() {
               <p className="text-xs text-zinc-400 mb-5">İşletmenizin genel açılış/kapanış saatlerini belirleyin</p>
               <div className="space-y-2 max-w-lg">
                 {Object.entries(workHours).map(([day, wh]) => (
-                  <div key={day} className="flex items-center gap-3 py-2">
+                  <div key={day} className="flex flex-col sm:flex-row sm:items-center gap-2 py-2">
                     <button
                       onClick={() => setWorkHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], active: !wh.active } }))}
-                      className={`w-24 text-left text-sm font-medium py-2 px-3 rounded-xl transition-colors ${
+                      className={`w-full sm:w-24 text-left text-sm font-medium py-2 px-3 rounded-xl transition-colors ${
                         wh.active ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-400"
                       }`}
                     >
                       {DAY_LABELS[day]}
                     </button>
                     {wh.active ? (
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full">
                         <input
                           type="time"
                           value={wh.start}
                           onChange={(e) => setWorkHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], start: e.target.value } }))}
-                          className="px-3 py-2 text-sm rounded-xl border border-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#2a5cff]"
+                          className="w-full sm:w-auto px-3 py-2 text-sm rounded-xl border border-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#2a5cff]"
                         />
-                        <span className="text-zinc-400">—</span>
+                        <span className="hidden sm:inline text-zinc-400">—</span>
                         <input
                           type="time"
                           value={wh.end}
                           onChange={(e) => setWorkHours((prev) => ({ ...prev, [day]: { ...prev[day as keyof typeof prev], end: e.target.value } }))}
-                          className="px-3 py-2 text-sm rounded-xl border border-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#2a5cff]"
+                          className="w-full sm:w-auto px-3 py-2 text-sm rounded-xl border border-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#2a5cff]"
                         />
                       </div>
                     ) : (

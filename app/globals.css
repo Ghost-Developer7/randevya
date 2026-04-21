@@ -31,11 +31,22 @@ html {
   scroll-behavior: smooth;
   overflow-x: clip;
   max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Safety net: media elements should never push layout wider than viewport */
 img, svg, video, canvas, iframe {
   max-width: 100%;
+}
+
+/* iOS Safari: prevent input focus auto-zoom for tenant panel on small screens */
+@media (max-width: 640px) {
+  .tenant-panel input,
+  .tenant-panel select,
+  .tenant-panel textarea {
+    font-size: 16px;
+  }
 }
 
 /* Hero animations */

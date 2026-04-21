@@ -122,7 +122,7 @@ export default function PanelShell({ children }: { children: React.ReactNode }) 
 
   // Normal panel — sidebar + header
   return (
-    <div className="flex flex-col h-dvh overflow-hidden bg-zinc-50">
+    <div className="tenant-panel flex flex-col h-dvh overflow-hidden bg-zinc-50">
       <AdminPreviewBanner />
       {showExpiredBanner && <SubscriptionExpiredBanner />}
       <div className="flex flex-1 overflow-hidden relative">
