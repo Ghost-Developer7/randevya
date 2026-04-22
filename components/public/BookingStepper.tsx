@@ -309,19 +309,26 @@ export default function BookingStepper() {
       {state.step === 3 && (
         <div>
           <h2 className="text-xl font-bold text-zinc-900 mb-4">Tarih Seçin</h2>
-          <input
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            className="w-full px-4 py-3 text-sm rounded-xl border border-zinc-300 bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-            onChange={(e) => {
-              const date = e.target.value
-              if (date) {
-                setState((s) => ({ ...s, date, step: 4 }))
-                setError("")
-                fetchSlots(state.service_id!, date, state.staff_id || undefined)
-              }
-            }}
-          />
+          <label className="relative block w-full cursor-pointer">
+            <span className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </span>
+            <input
+              type="date"
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full px-4 py-3 pr-12 text-sm rounded-xl border border-zinc-300 bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] [color-scheme:light]"
+              onChange={(e) => {
+                const date = e.target.value
+                if (date) {
+                  setState((s) => ({ ...s, date, step: 4 }))
+                  setError("")
+                  fetchSlots(state.service_id!, date, state.staff_id || undefined)
+                }
+              }}
+            />
+          </label>
           <div className="mt-4">
             <Button variant="ghost" onClick={goBack}>&larr; Geri</Button>
           </div>
