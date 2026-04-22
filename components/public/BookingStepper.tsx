@@ -5,6 +5,88 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Turnstile from "@/components/ui/Turnstile"
 
+const MONTHS = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"]
+const DAYS = ["Pzt","Sal","Çar","Per","Cum","Cmt","Paz"]
+
+function CalendarPicker({ value, onChange }: { value: string | null; onChange: (date: string) => void }) {
+  const today = new Date(); today.setHours(0,0,0,0)
+  const [year, setYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth())
+
+  const firstDayOfWeek = (new Date(year, month, 1).getDay() + 6) % 7 // Mon=0
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1) } else setMonth(m => m - 1) }
+  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1) } else setMonth(m => m + 1) }
+
+  const lastDayPrevMonth = new Date(year, month, 0); lastDayPrevMonth.setHours(0,0,0,0)
+  const canPrev = lastDayPrevMonth >= today
+
+  const cells: (number | null)[] = [
+    ...Array(firstDayOfWeek).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ]
+
+  const isDisabled = (day: number) => new Date(year, month, day) < today
+  const isSelected = (day: number) => {
+    if (!value) return false
+    const [y, m, d] = value.split("-").map(Number)
+    return y === year && m - 1 === month && d === day
+  }
+  const isToday = (day: number) => {
+    const t = new Date(); return t.getFullYear() === year && t.getMonth() === month && t.getDate() === day
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-3 w-full">
+      <div className="flex items-center justify-between mb-3">
+        <button type="button" onClick={prevMonth} disabled={!canPrev}
+          className="p-2 rounded-lg hover:bg-zinc-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <span className="font-semibold text-sm text-zinc-900">{MONTHS[month]} {year}</span>
+        <button type="button" onClick={nextMonth}
+          className="p-2 rounded-lg hover:bg-zinc-100 transition-colors">
+          <svg className="w-4 h-4 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <div className="grid grid-cols-7 mb-1">
+        {DAYS.map(d => <div key={d} className="text-center text-[11px] font-medium text-zinc-400 py-1">{d}</div>)}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((day, i) => {
+          if (!day) return <div key={`e-${i}`} />
+          const disabled = isDisabled(day)
+          const selected = isSelected(day)
+          const todayCell = isToday(day)
+          const pad = (n: number) => String(n).padStart(2, "0")
+          return (
+            <button
+              key={day}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(`${year}-${pad(month + 1)}-${pad(day)}`)}
+              className={[
+                "w-full aspect-square flex items-center justify-center rounded-lg text-sm font-medium transition-colors",
+                selected ? "bg-[var(--color-primary)] text-white" : "",
+                !selected && todayCell ? "border border-[var(--color-primary)] text-[var(--color-primary)]" : "",
+                !selected && !disabled && !todayCell ? "hover:bg-zinc-100 text-zinc-900" : "",
+                disabled ? "text-zinc-300 cursor-not-allowed" : "",
+              ].join(" ")}
+            >
+              {day}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 type BookingState = {
   step: 1 | 2 | 3 | 4 | 5 | 6 | 7
   service_id: string | null
@@ -309,18 +391,9 @@ export default function BookingStepper() {
       {state.step === 3 && (
         <div>
           <h2 className="text-xl font-bold text-zinc-900 mb-4">Tarih Seçin</h2>
-          <input
-            type="date"
-            min={new Date().toISOString().split("T")[0]}
-            value={state.date ?? ""}
-            className="w-full px-4 py-3 text-base rounded-xl border border-zinc-300 bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] [color-scheme:light]"
-            onChange={(e) => {
-              const date = e.target.value
-              if (date) {
-                setState((s) => ({ ...s, date }))
-                setError("")
-              }
-            }}
+          <CalendarPicker
+            value={state.date}
+            onChange={(date) => { setState((s) => ({ ...s, date })); setError("") }}
           />
           {state.date && (
             <Button
