@@ -318,17 +318,28 @@ export default function BookingStepper() {
             <input
               type="date"
               min={new Date().toISOString().split("T")[0]}
-              className="w-full px-4 py-3 pr-12 text-sm rounded-xl border border-zinc-300 bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] [color-scheme:light]"
+              value={state.date ?? ""}
+              className="w-full px-4 py-3 pr-12 text-base rounded-xl border border-zinc-300 bg-white text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] [color-scheme:light]"
               onChange={(e) => {
                 const date = e.target.value
                 if (date) {
-                  setState((s) => ({ ...s, date, step: 4 }))
+                  setState((s) => ({ ...s, date }))
                   setError("")
-                  fetchSlots(state.service_id!, date, state.staff_id || undefined)
                 }
               }}
             />
           </label>
+          {state.date && (
+            <Button
+              className="mt-4 w-full"
+              onClick={() => {
+                setState((s) => ({ ...s, step: 4 }))
+                fetchSlots(state.service_id!, state.date!, state.staff_id || undefined)
+              }}
+            >
+              Devam Et &rarr;
+            </Button>
+          )}
           <div className="mt-4">
             <Button variant="ghost" onClick={goBack}>&larr; Geri</Button>
           </div>
