@@ -160,7 +160,7 @@ export default function BookingStepper() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto w-full overflow-hidden">
       {/* Step indicator — mobilde aktif adım etiketi büyük, diğerleri sadece nokta */}
       <div className="mb-6 sm:mb-8">
         {/* Mobile: "Adım X/Y — Başlık" */}
