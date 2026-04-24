@@ -113,6 +113,11 @@ async function postHandler(
     return err("Geçersiz domain formatı (örn: takvim.firmam.com)")
   }
 
+  // Platform subdomainleri custom domain olamaz
+  if (domainClean.endsWith(".randevya.com")) {
+    return err("randevya.com subdomainleri custom domain olarak kullanılamaz. Müşterinin domain_slug'ını değiştirin.")
+  }
+
   // Başka tenant kullanıyor mu?
   const taken = await db.tenant.findFirst({
     where: { custom_domain: domainClean, id: { not: id } },

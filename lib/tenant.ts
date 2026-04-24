@@ -81,6 +81,12 @@ export async function resolveTenantByRawId(raw: string) {
   if (raw.startsWith("slug:")) {
     const slug = raw.slice(5)
     tenant = await db.tenant.findUnique({ where: { domain_slug: slug, is_active: true } })
+    // Slug bulunamazsa aynı subdomainin custom_domain olarak set edilmiş olabileceğini kontrol et
+    // (ör: admin ozgenailstudio.randevya.com'u custom_domain olarak kaydettiyse)
+    if (!tenant) {
+      const fullHost = `${slug}.randevya.com`
+      tenant = await db.tenant.findFirst({ where: { custom_domain: fullHost, is_active: true } })
+    }
   } else if (raw.startsWith("custom:")) {
     const domain = raw.slice(7)
     tenant = await db.tenant.findFirst({ where: { custom_domain: domain, is_active: true } })
