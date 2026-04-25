@@ -150,11 +150,11 @@ function statusBanner(type: "success" | "warning" | "danger" | "info"): string {
 }
 
 function formatDate(date: Date): string {
-  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })
+  return date.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Istanbul" })
 }
 
 function formatTime(date: Date): string {
-  return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+  return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Istanbul" })
 }
 
 // ─── Randevu E-postaları ────────────────────────────────────────────────────

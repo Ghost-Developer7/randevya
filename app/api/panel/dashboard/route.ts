@@ -21,19 +21,26 @@ async function getHandler() {
   } else {
     tenantId = session!.user.tenant_id
   }
-  const now = new Date()
-  const todayStart = new Date(now); todayStart.setHours(0, 0, 0, 0)
-  const todayEnd = new Date(now); todayEnd.setHours(23, 59, 59, 999)
+  // Türkiye yerel tarihi (UTC+3) ile gün sınırları
+  const nowTR = new Date(Date.now() + 3 * 60 * 60 * 1000)
+  const todayStr = nowTR.toISOString().slice(0, 10)
+  const todayStart = new Date(`${todayStr}T00:00:00+03:00`)
+  const todayEnd = new Date(`${todayStr}T23:59:59+03:00`)
 
-  // Hafta başlangıcı (Pazartesi)
-  const weekStart = new Date(now)
-  weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1))
-  weekStart.setHours(0, 0, 0, 0)
+  // Hafta başlangıcı (Pazartesi) — Türkiye yerel günü baz alarak
+  const dayOfWeek = nowTR.getUTCDay() // 0=Sun, 1=Mon...
+  const daysToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const weekStartTR = new Date(nowTR.getTime() + daysToMon * 86400000)
+  const weekStartStr = weekStartTR.toISOString().slice(0, 10)
+  const weekStart = new Date(`${weekStartStr}T00:00:00+03:00`)
 
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const monthStartStr = `${todayStr.slice(0, 7)}-01`
+  const monthStart = new Date(`${monthStartStr}T00:00:00+03:00`)
 
   // Son 7 gün için günlük veri
-  const sevenDaysAgo = new Date(now); sevenDaysAgo.setDate(now.getDate() - 6); sevenDaysAgo.setHours(0, 0, 0, 0)
+  const sevenDaysAgoTR = new Date(nowTR.getTime() - 6 * 86400000)
+  const sevenDaysAgoStr = sevenDaysAgoTR.toISOString().slice(0, 10)
+  const sevenDaysAgo = new Date(`${sevenDaysAgoStr}T00:00:00+03:00`)
 
   const [
     todayCount,
@@ -96,15 +103,17 @@ async function getHandler() {
     }),
   ])
 
-  // Günlük grafik verisi (son 7 gün)
+  // Günlük grafik verisi (son 7 gün) — Türkiye yerel günü baz alarak
   const dayNames = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"]
+  const TZ_OFF = 3 * 60 * 60 * 1000
   const dailyMap: Record<string, number> = {}
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(now); d.setDate(now.getDate() - i)
-    dailyMap[dayNames[d.getDay()]] = 0
+    const d = new Date(nowTR.getTime() - i * 86400000)
+    dailyMap[dayNames[d.getUTCDay()]] = 0
   }
   allAppointments7d.forEach((a) => {
-    const day = dayNames[a.start_time.getDay()]
+    const aTR = new Date(a.start_time.getTime() + TZ_OFF)
+    const day = dayNames[aTR.getUTCDay()]
     if (dailyMap[day] !== undefined) dailyMap[day]++
   })
   const dailyChart = Object.entries(dailyMap).map(([day, count]) => ({ day, count }))
@@ -122,7 +131,8 @@ async function getHandler() {
   const hourlyMap: Record<number, number> = {}
   for (let h = 9; h <= 18; h++) hourlyMap[h] = 0
   hourlyData.forEach((a) => {
-    const h = a.start_time.getHours()
+    const aTR = new Date(a.start_time.getTime() + TZ_OFF)
+    const h = aTR.getUTCHours()
     if (hourlyMap[h] !== undefined) hourlyMap[h]++
   })
   const hourlyChart = Object.entries(hourlyMap).map(([hour, count]) => ({ hour: `${hour}:00`, count: Number(count) }))

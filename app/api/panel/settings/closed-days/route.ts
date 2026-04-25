@@ -66,7 +66,7 @@ async function postHandler(req: NextRequest) {
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (!dateRegex.test(body.date)) return err("Geçersiz tarih formatı. Beklenen: YYYY-MM-DD")
 
-  const parsedDate = new Date(`${body.date}T00:00:00`)
+  const parsedDate = new Date(`${body.date}T00:00:00+03:00`)
   if (isNaN(parsedDate.getTime())) return err("Geçersiz tarih")
 
   // staff_id verilmişse tenant'a ait olduğunu doğrula

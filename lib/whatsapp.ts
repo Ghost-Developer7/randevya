@@ -118,6 +118,7 @@ export async function sendWaAppointmentConfirm(params: {
   const dateTime = params.startTime.toLocaleString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Istanbul",
   })
 
   const result = await sendTemplateMessage({
@@ -158,6 +159,7 @@ export async function sendWaAppointmentCancel(params: {
   const dateTime = params.startTime.toLocaleString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Istanbul",
   })
 
   const result = await sendTemplateMessage({
@@ -198,6 +200,7 @@ export async function sendWaAppointmentReminder(params: {
   const dateTime = params.startTime.toLocaleString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Istanbul",
   })
 
   const result = await sendTemplateMessage({
@@ -240,6 +243,7 @@ export async function sendWaWaitlistNotify(params: {
   const dateTime = params.startTime.toLocaleString("tr-TR", {
     day: "numeric", month: "long", year: "numeric",
     hour: "2-digit", minute: "2-digit",
+    timeZone: "Europe/Istanbul",
   })
 
   const result = await sendTemplateMessage({

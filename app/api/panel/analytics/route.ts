@@ -33,10 +33,10 @@ async function getHandler(req: NextRequest) {
   const period = periodParam as Period
   const days = periodToDays(period)
 
-  const now = new Date()
-  const periodStart = new Date(now)
-  periodStart.setDate(periodStart.getDate() - days)
-  periodStart.setHours(0, 0, 0, 0)
+  const nowTR = new Date(Date.now() + 3 * 60 * 60 * 1000)
+  const periodStartTR = new Date(nowTR.getTime() - days * 86400000)
+  const periodStartStr = periodStartTR.toISOString().slice(0, 10)
+  const periodStart = new Date(`${periodStartStr}T00:00:00+03:00`)
 
   // Tüm randevuları bir sorguda çek, sonra bellek içi grupla
   // (Prisma SQL Server'da raw date truncation zor, bu yol daha taşınabilir)
@@ -59,16 +59,17 @@ async function getHandler(req: NextRequest) {
   // ── daily_appointments ──────────────────────────────────────────────────────
   const dailyMap = new Map<string, { count: number; cancelled_count: number }>()
 
-  // Aralıktaki her gün için sıfır satırı hazırla
+  const TZ_OFF = 3 * 60 * 60 * 1000
+
+  // Aralıktaki her gün için sıfır satırı hazırla (Türkiye yerel tarihi)
   for (let i = 0; i < days; i++) {
-    const d = new Date(periodStart)
-    d.setDate(d.getDate() + i)
-    const key = d.toISOString().slice(0, 10)
+    const d = new Date(periodStart.getTime() + i * 86400000)
+    const key = new Date(d.getTime() + TZ_OFF).toISOString().slice(0, 10)
     dailyMap.set(key, { count: 0, cancelled_count: 0 })
   }
 
   for (const a of appointments) {
-    const key = a.start_time.toISOString().slice(0, 10)
+    const key = new Date(a.start_time.getTime() + TZ_OFF).toISOString().slice(0, 10)
     const entry = dailyMap.get(key)
     if (!entry) continue
     entry.count++
