@@ -16,8 +16,9 @@ async function getHandler(req: NextRequest) {
   if (!serviceId) return err("serviceId zorunlu")
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return err("date zorunlu (YYYY-MM-DD)")
 
-  // Geçmiş tarih kontrolü
-  if (new Date(date) < new Date(new Date().toDateString())) {
+  // Geçmiş tarih kontrolü — Türkiye yerel tarihi (UTC+3) ile karşılaştır
+  const todayTR = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
+  if (date < todayTR) {
     return err("Geçmiş tarih için slot sorgulanaması")
   }
 

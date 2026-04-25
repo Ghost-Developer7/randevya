@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+# MSSQL native bağlantı için gerekli
+RUN apk add --no-cache openssl libc6-compat
+
+WORKDIR /app
+
+# Bağımlılıkları önce kopyala — layer cache için
+COPY package.json package-lock.json ./
+
+RUN npm ci --legacy-peer-deps
+
+# Kaynak kodu kopyala
+COPY . .
+
+# Prisma istemcisini oluştur
+RUN npx prisma generate
+
+EXPOSE 3003
+
+# Başlamadan önce prisma generate yeniler, sonra dev server
+CMD ["sh", "-c", "npx prisma generate && npm run dev"]

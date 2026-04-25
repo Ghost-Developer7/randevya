@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3003:3003"
+    volumes:
+      # Hot reload için kaynak kodu mount et
+      - .:/app
+      # Container içindeki node_modules korunur, host'takiyle ezilmez
+      - /app/node_modules
+      # Prisma generate çıktısı korunur
+      - /app/app/generated
+    env_file:
+      - .env.local
+    # HOSTNAME gerekli — Next.js dev server container dışından erişilebilir olsun
+    environment:
+      - HOSTNAME=0.0.0.0

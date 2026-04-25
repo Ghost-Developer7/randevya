@@ -19,12 +19,20 @@ function minutesToTime(m: number): string {
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`
 }
 
+// Türkiye UTC+3 offset (ms)
+const TZ_OFFSET_MS = 3 * 60 * 60 * 1000
+
+// UTC Date'i Türkiye saatine çevir (getUTCHours kullanımı için +3 ekler)
+function toTurkeyDate(d: Date): Date {
+  return new Date(d.getTime() + TZ_OFFSET_MS)
+}
+
 // Belirli bir tarihteki personelin müsait aralıklarını hesapla
 // Mevcut randevuları çıkarır, kalan boşlukları döner
 async function getAvailableIntervalsForStaff(
   staffId: string,
   tenantId: string,
-  date: Date, // UTC midnight
+  dateStr: string, // "YYYY-MM-DD" — Türkiye yerel tarih
   durationMin: number
 ): Promise<{ startMin: number; endMin: number }[]> {
   const staff = await db.staff.findUnique({
@@ -33,15 +41,15 @@ async function getAvailableIntervalsForStaff(
   if (!staff) return []
 
   const workHours: WorkHoursJson = JSON.parse(staff.work_hours)
-  const dayKey = DAY_KEYS[date.getDay()]
+  // Haftanın gününü Türkiye yerel zamanına göre hesapla
+  const tzDate = new Date(`${dateStr}T12:00:00+03:00`) // öğle saati — DST kayması yok
+  const dayKey = DAY_KEYS[tzDate.getDay()]
   const intervals = workHours[dayKey] ?? []
   if (intervals.length === 0) return []
 
-  // O gün için randevuları çek
-  const dayStart = new Date(date)
-  dayStart.setHours(0, 0, 0, 0)
-  const dayEnd = new Date(date)
-  dayEnd.setHours(23, 59, 59, 999)
+  // O günün Türkiye gece yarısı / sonu (UTC olarak sakla)
+  const dayStart = new Date(`${dateStr}T00:00:00+03:00`)
+  const dayEnd = new Date(`${dateStr}T23:59:59+03:00`)
 
   const appointments = await db.appointment.findMany({
     where: {
@@ -53,11 +61,15 @@ async function getAvailableIntervalsForStaff(
     orderBy: { start_time: "asc" },
   })
 
-  // Meşgul aralıkları dakika olarak listele
-  const busyIntervals = appointments.map((a) => ({
-    startMin: a.start_time.getHours() * 60 + a.start_time.getMinutes(),
-    endMin: a.end_time.getHours() * 60 + a.end_time.getMinutes(),
-  }))
+  // Meşgul aralıkları Türkiye yerel saatiyle dakika olarak listele
+  const busyIntervals = appointments.map((a) => {
+    const startTR = toTurkeyDate(a.start_time)
+    const endTR = toTurkeyDate(a.end_time)
+    return {
+      startMin: startTR.getUTCHours() * 60 + startTR.getUTCMinutes(),
+      endMin: endTR.getUTCHours() * 60 + endTR.getUTCMinutes(),
+    }
+  })
 
   // Çalışma aralıklarını işle, meşgul zamanları çıkar
   const available: { startMin: number; endMin: number }[] = []
@@ -97,8 +109,8 @@ function generateSlots(
   let cursor = interval.startMin
 
   while (cursor + durationMin <= interval.endMin) {
-    const start = `${dateStr}T${minutesToTime(cursor)}:00`
-    const end = `${dateStr}T${minutesToTime(cursor + durationMin)}:00`
+    const start = `${dateStr}T${minutesToTime(cursor)}:00+03:00`
+    const end = `${dateStr}T${minutesToTime(cursor + durationMin)}:00+03:00`
     slots.push({ start, end })
     cursor += durationMin
   }
@@ -124,8 +136,6 @@ export async function getAvailableSlots({
   })
   if (!service) return []
 
-  const targetDate = new Date(`${date}T00:00:00`)
-
   // Hangi personeller bu hizmeti veriyor?
   const staffQuery = staffId
     ? await db.staffService.findMany({
@@ -145,7 +155,7 @@ export async function getAvailableSlots({
     const intervals = await getAvailableIntervalsForStaff(
       ss.staff_id,
       tenantId,
-      targetDate,
+      date,
       service.duration_min
     )
 

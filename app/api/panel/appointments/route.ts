@@ -23,10 +23,10 @@ async function getHandler(req: NextRequest) {
   const staffId = searchParams.get("staffId") ?? undefined
   const statusParam = searchParams.get("status")
 
-  const from = fromParam ? new Date(`${fromParam}T00:00:00`) : (() => {
+  const from = fromParam ? new Date(`${fromParam}T00:00:00+03:00`) : (() => {
     const d = new Date(); d.setDate(d.getDate() - d.getDay()); d.setHours(0, 0, 0, 0); return d
   })()
-  const to = toParam ? new Date(`${toParam}T23:59:59`) : (() => {
+  const to = toParam ? new Date(`${toParam}T23:59:59+03:00`) : (() => {
     const d = new Date(from); d.setDate(d.getDate() + 6); d.setHours(23, 59, 59, 999); return d
   })()
 
