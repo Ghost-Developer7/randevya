@@ -140,7 +140,7 @@ async function getHandler(req: NextRequest) {
   return ok({
     period,
     period_start: periodStart.toISOString(),
-    period_end: now.toISOString(),
+    period_end: nowTR.toISOString(),
     total_appointments,
     total_cancelled,
     cancellation_rate,
