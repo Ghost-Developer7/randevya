@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Logo from "@/components/ui/Logo"
 import Turnstile from "@/components/ui/Turnstile"
+import Spinner from "@/components/ui/Spinner"
 
 const sectors = [
   "Kuaför / Berber",
@@ -24,11 +25,28 @@ const sectors = [
 
 type Step = 1 | 2 | 3
 
+interface Plan {
+  id: string
+  name: string
+  price_monthly: number
+  max_staff: number
+  max_services: number
+  whatsapp_enabled: boolean
+  custom_domain: boolean
+  waitlist_enabled: boolean
+  analytics: boolean
+  priority_support: boolean
+}
+
 export default function RegisterPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  
+  // Plans state
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [plansLoading, setPlansLoading] = useState(true)
 
   // Step 1 - Business info
   const [companyName, setCompanyName] = useState("")
@@ -53,6 +71,23 @@ export default function RegisterPage() {
     TERMS_OF_USE: false,
     DISTANCE_SALES: false,
   })
+
+  useEffect(() => {
+    async function fetchPlans() {
+      try {
+        const res = await fetch("/api/public/plans")
+        const data = await res.json()
+        if (data.success) {
+          setPlans(data.data)
+        }
+      } catch (err) {
+        console.error("Planlar yuklenemedi:", err)
+      } finally {
+        setPlansLoading(false)
+      }
+    }
+    fetchPlans()
+  }, [])
 
   const toggleConsent = (key: keyof typeof consents) => {
     setConsents((prev) => ({ ...prev, [key]: !prev[key] }))
@@ -126,99 +161,92 @@ export default function RegisterPage() {
 
             {/* Pricing cards */}
             <div className="space-y-3">
-              {/* Deneme */}
-              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-base">Deneme</h3>
-                  <div className="text-right">
-                    <span className="text-lg font-bold">14 Gün</span>
-                    <p className="text-[10px] text-blue-200">ücretsiz deneme</p>
-                  </div>
+              {plansLoading ? (
+                <div className="flex flex-col items-center justify-center p-12 bg-white/5 rounded-2xl backdrop-blur-sm border border-white/10">
+                  <Spinner size="lg" className="text-white mb-3" />
+                  <p className="text-xs text-blue-200">Planlar yükleniyor...</p>
                 </div>
-                <p className="text-xs text-blue-100">Giriş paketinin tüm özellikleri 14 gün ücretsiz.</p>
-              </div>
+              ) : (
+                <>
+                  {/* Deneme */}
+                  <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-base">Deneme</h3>
+                      <div className="text-right">
+                        <span className="text-lg font-bold">14 Gün</span>
+                        <p className="text-[10px] text-blue-200">ücretsiz deneme</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-100">Giriş paketinin tüm özellikleri 14 gün ücretsiz.</p>
+                  </div>
 
-              {/* Pro */}
-              <div className="p-4 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 ring-1 ring-white/10">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-base">Giriş</h3>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-bold">300 ₺</span>
-                    <span className="text-xs text-blue-200">/ay</span>
-                  </div>
-                </div>
-                <div className="flex justify-end mb-2">
-                  <span className="text-[11px] text-emerald-300">Yıllık: 2.700 ₺ +KDV <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">3 Ay Hediye</span></span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-blue-100">
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    5 personel
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    E-posta bildirimi
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    E-posta destek
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    7/24 destek
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    Basit analitik rapor
-                  </span>
-                </div>
-              </div>
+                  {plans.filter(p => p.price_monthly > 0).map((plan, idx, filtered) => {
+                    const isLast = idx === filtered.length - 1
+                    const kdv = Math.round(plan.price_monthly * 0.2)
+                    const total = plan.price_monthly + kdv
+                    const yearly = Math.round(plan.price_monthly * 9 * 1.2)
 
-              {/* Enterprise */}
-              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/10">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-base">Profesyonel</h3>
-                  <div className="text-right">
-                    <span className="text-lg font-bold">600 ₺</span>
-                    <span className="text-xs text-blue-200">/ay</span>
-                  </div>
-                </div>
-                <div className="flex justify-end mb-2">
-                  <span className="text-[11px] text-emerald-300">Yıllık: 5.400 ₺ +KDV <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">3 Ay Hediye</span></span>
-                </div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-blue-100">
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    Sınırsız personel
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    Sınırsız hizmet
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    WhatsApp bildirim
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    Özel alan adı
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    7/24 öncelikli destek
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    WhatsApp destek
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                    Tam analitik & rapor
-                  </span>
-                </div>
-              </div>
+                    return (
+                      <div 
+                        key={plan.id} 
+                        className={`p-4 rounded-xl backdrop-blur-sm border transition-all ${
+                          isLast 
+                            ? "bg-white/20 border-white/30 ring-1 ring-white/10 scale-[1.02]" 
+                            : "bg-white/10 border-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-base">{plan.name}</h3>
+                            {isLast && (
+                              <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold">En Popüler</span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className="text-lg font-bold">{plan.price_monthly} ₺</span>
+                            <span className="text-xs text-blue-200">/ay</span>
+                          </div>
+                        </div>
+                        <div className="flex justify-end mb-2">
+                          <span className="text-[11px] text-emerald-300">Yıllık: {yearly.toLocaleString("tr-TR")} ₺ +KDV <span className="bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold ml-1">3 Ay Hediye</span></span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-blue-100">
+                          <span className="flex items-center gap-1.5">
+                            <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            {plan.max_staff >= 999 ? "Sınırsız" : plan.max_staff} personel
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            {plan.max_services >= 999 ? "Sınırsız" : plan.max_services} hizmet
+                          </span>
+                          {plan.whatsapp_enabled && (
+                            <span className="flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              WhatsApp bildirim
+                            </span>
+                          )}
+                          {plan.custom_domain && (
+                            <span className="flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              Özel alan adı
+                            </span>
+                          )}
+                          {plan.analytics && (
+                            <span className="flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                              Analitik rapor
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1.5">
+                            <svg className="w-3 h-3 text-emerald-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                            {plan.priority_support ? "7/24 Öncelikli" : "E-posta"} destek
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
             </div>
 
             <p className="text-xs text-blue-200/60 mt-4 text-center">
